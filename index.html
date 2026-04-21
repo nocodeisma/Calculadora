@@ -434,9 +434,59 @@ function renderHome(){
         <div class="prog-bg"><div class="prog-fill" style="width:${pctD.toFixed(1)}%;background:${pctD>80?'#a32d2d':pctD>50?'#BA7517':'#2d7a2d'}"></div></div></div>
       </div>
     </div>
-    ${mesesKeys.length>0?`<div class="chart-wrap"><div class="chart-title">Receitas vs Despesas por mês</div><div class="chart-bars">
-      ${mesesKeys.map(m=>`<div class="chart-bar-wrap"><div class="chart-bar receita" style="height:${Math.round((mesesData[m].r/maxVal)*70)}px"></div><div class="chart-bar-label">${m.substring(0,3)}</div></div><div class="chart-bar-wrap"><div class="chart-bar despesa" style="height:${Math.round((mesesData[m].d/maxVal)*70)}px"></div><div class="chart-bar-label"></div></div>`).join('')}
-      </div><div class="chart-legend"><div class="chart-legend-item"><div class="chart-legend-dot" style="background:#185FA5"></div>Receita</div><div class="chart-legend-item"><div class="chart-legend-dot" style="background:#1a1a1a"></div>Despesa</div></div></div>`:''}
+    ${(()=>{
+      const saldoPos = Math.max(0, saldo);
+      const total3 = totalR + totalD + saldoPos;
+      if(total3 === 0) return '';
+      const cx=100,cy=100,r=80;
+      function slice(start,val,total,color){
+        if(val<=0) return '';
+        const pct=val/total;
+        if(pct>=1) return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}"/>`;
+        const a=start*2*Math.PI, b=(start+pct)*2*Math.PI;
+        const x1=cx+r*Math.sin(a), y1=cy-r*Math.cos(a);
+        const x2=cx+r*Math.sin(b), y2=cy-r*Math.cos(b);
+        const lg=pct>0.5?1:0;
+        return `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${lg},1 ${x2},${y2} Z" fill="${color}"/>`;
+      }
+      const pR=totalR/total3, pD=totalD/total3;
+      const svgSlices = slice(0,totalR,total3,'#185FA5') + slice(pR,totalD,total3,'#a32d2d') + slice(pR+pD,saldoPos,total3,'#2d7a2d');
+      return `<div class="chart-wrap">
+        <div class="chart-title">Distribuição financeira</div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <svg viewBox="0 0 200 200" style="width:130px;height:130px;flex-shrink:0">
+            ${svgSlices}
+            <circle cx="${cx}" cy="${cy}" r="40" fill="#fff"/>
+          </svg>
+          <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+            <div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+                <div style="width:10px;height:10px;border-radius:2px;background:#185FA5;flex-shrink:0"></div>
+                <span style="font-size:11px;color:#888">Receitas</span>
+              </div>
+              <div style="font-size:14px;font-weight:500">${fmt(totalR)}</div>
+              <div style="font-size:11px;color:#888">${(totalR/total3*100).toFixed(1)}%</div>
+            </div>
+            <div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+                <div style="width:10px;height:10px;border-radius:2px;background:#a32d2d;flex-shrink:0"></div>
+                <span style="font-size:11px;color:#888">Despesas</span>
+              </div>
+              <div style="font-size:14px;font-weight:500;color:#a32d2d">${fmt(totalD)}</div>
+              <div style="font-size:11px;color:#888">${(totalD/total3*100).toFixed(1)}%</div>
+            </div>
+            <div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+                <div style="width:10px;height:10px;border-radius:2px;background:#2d7a2d;flex-shrink:0"></div>
+                <span style="font-size:11px;color:#888">Saldo</span>
+              </div>
+              <div style="font-size:14px;font-weight:500;color:#2d7a2d">${fmt(saldoPos)}</div>
+              <div style="font-size:11px;color:#888">${(saldoPos/total3*100).toFixed(1)}%</div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    })()}
     <div class="day-split">
       <div class="day-card"><div class="day-header day-header-16"><span>Dia 16</span><span>${fmt(r16-d16)}</span></div><div class="day-body">
         <div class="day-row"><span class="day-row-label">Receita</span><span class="day-row-val">${fmt(r16)}</span></div>
