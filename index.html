@@ -2,287 +2,439 @@
 
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Calculadora de Projetos</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Finanças</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; color: #1a1a1a; min-height: 100vh; padding: 2rem 1rem; }
-  .container { max-width: 680px; margin: 0 auto; }
-  h1 { font-size: 22px; font-weight: 500; margin-bottom: 4px; }
-  .sub { font-size: 13px; color: #666; margin-bottom: 1.5rem; }
-  .card { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
-  .card-title { font-size: 11px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
-  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-  label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; }
-  input[type=text], input[type=number] { width: 100%; padding: 9px 11px; font-size: 14px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; color: #1a1a1a; font-family: inherit; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
-  input:focus { border-color: #999; box-shadow: 0 0 0 3px rgba(0,0,0,0.06); }
-  .date-label { font-size: 12px; color: #666; margin-bottom: 6px; display: block; }
-  .date-toggle { display: flex; gap: 8px; margin-bottom: 10px; }
-  .date-btn { flex: 1; padding: 9px; font-size: 13px; font-weight: 500; border: 2px solid #ddd; border-radius: 8px; background: #f5f5f3; color: #888; cursor: pointer; font-family: inherit; transition: all 0.15s; }
-  .date-btn-16.selected { background: #185FA5; border-color: #0C447C; color: #fff; }
-  .date-btn-25.selected { background: #BA7517; border-color: #854F0B; color: #fff; }
-  .subtotal-preview { display: flex; align-items: center; justify-content: space-between; background: #f5f5f3; border-radius: 8px; padding: 10px 14px; margin-top: 8px; }
-  .subtotal-preview span { font-size: 12px; color: #666; }
-  .subtotal-preview strong { font-size: 16px; font-weight: 500; }
-  .btn-add { width: 100%; padding: 10px; font-size: 14px; font-weight: 500; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #1a1a1a; cursor: pointer; font-family: inherit; margin-top: 10px; transition: background 0.15s; }
-  .btn-add:hover { background: #f5f5f3; }
-  .divider { height: 1px; background: #eee; margin: 1.25rem 0; }
-  .project-item { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 0.9rem 1.1rem; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .project-name { font-size: 13px; font-weight: 500; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .project-meta { font-size: 11px; color: #888; margin-top: 2px; }
-  .badge { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 99px; margin-left: 6px; vertical-align: middle; }
-  .badge-16 { background: #185FA5; color: #fff; }
-  .badge-25 { background: #BA7517; color: #fff; }
-  .project-value { font-size: 13px; font-weight: 500; white-space: nowrap; }
-  .btn-del { background: none; border: none; cursor: pointer; font-size: 14px; color: #bbb; padding: 0 0 0 6px; line-height: 1; }
-  .btn-del:hover { color: #e24b4a; }
-  .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-  .pay-column { border-radius: 10px; overflow: hidden; border: 1px solid #e5e5e5; }
-  .pay-header { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
-  .pay-header-16 { background: #185FA5; }
-  .pay-header-25 { background: #BA7517; }
-  .pay-day, .pay-total { font-size: 13px; font-weight: 500; color: #fff; }
-  .pay-total { font-size: 15px; }
-  .pay-items { padding: 8px 0; background: #fff; }
-  .pay-item { padding: 7px 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid #f0f0f0; }
-  .pay-item:last-child { border-bottom: none; }
-  .pay-item-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
-  .pay-item-val { font-size: 12px; color: #666; white-space: nowrap; }
-  .pay-empty { padding: 16px 14px; font-size: 12px; color: #bbb; text-align: center; background: #fff; }
-  .total-bar { background: #f5f5f3; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-  .total-bar-label { font-size: 13px; color: #666; }
-  .total-bar-val { font-size: 20px; font-weight: 500; }
-  .delta-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-  .delta-box { border-radius: 8px; padding: 11px 14px; }
-  .delta-box.neutral { background: #f5f5f3; }
-  .delta-box.positive { background: #eaf3de; }
-  .delta-box.negative { background: #fcebeb; }
-  .delta-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
-  .delta-box.neutral .delta-label, .delta-box.neutral .delta-val, .delta-box.neutral .delta-sub { color: #888; }
-  .delta-box.positive .delta-label, .delta-box.positive .delta-val, .delta-box.positive .delta-sub { color: #3b6d11; }
-  .delta-box.negative .delta-label, .delta-box.negative .delta-val, .delta-box.negative .delta-sub { color: #a32d2d; }
-  .delta-val { font-size: 16px; font-weight: 500; }
-  .delta-sub { font-size: 11px; margin-top: 2px; }
-  .progress-wrap { margin-top: 12px; }
-  .progress-bar-bg { height: 6px; background: #e5e5e5; border-radius: 99px; overflow: hidden; }
-  .progress-bar-fill { height: 100%; border-radius: 99px; transition: width 0.3s; background: #888; }
-  .progress-label { display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-top: 4px; }
-  .btn-export { width: 100%; padding: 10px; font-size: 13px; background: none; border: 1px solid #e5e5e5; border-radius: 8px; color: #888; cursor: pointer; font-family: inherit; margin-top: 8px; }
-  .btn-export:hover { background: #f5f5f3; }
-  @media (max-width: 480px) {
-    .grid3 { grid-template-columns: 1fr 1fr; }
-    .delta-row { grid-template-columns: 1fr 1fr; }
-  }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f0ee;color:#1a1a1a;min-height:100vh;}
+
+.nav{background:#1a1a1a;display:flex;align-items:center;gap:10px;padding:0 16px;position:sticky;top:0;z-index:100;height:50px;}
+.btn-nav-back{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:0;line-height:1;}
+.nav-title{color:#fff;font-size:15px;font-weight:500;flex:1;}
+
+.home{padding:1.5rem 1rem 2rem;}
+.home-title{font-size:24px;font-weight:500;margin-bottom:4px;}
+.home-sub{font-size:13px;color:#666;margin-bottom:1.5rem;}
+.home-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem;}
+.home-btn{border-radius:14px;padding:1.25rem;border:none;cursor:pointer;text-align:left;transition:transform 0.12s;width:100%;}
+.home-btn:active{transform:scale(0.97);}
+.home-btn-receita{background:#185FA5;color:#fff;}
+.home-btn-despesa{background:#1a1a1a;color:#fff;}
+.home-btn-icon{font-size:22px;margin-bottom:8px;}
+.home-btn-label{font-size:11px;opacity:0.7;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:2px;}
+.home-btn-title{font-size:16px;font-weight:500;}
+
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.summary-card{background:#fff;border-radius:12px;padding:14px;border:1px solid #e5e5e5;}
+.summary-card.full{grid-column:1/-1;}
+.s-label{font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.s-val{font-size:20px;font-weight:500;}
+.s-val.green{color:#2d7a2d;}
+.s-val.red{color:#a32d2d;}
+.s-val.blue{color:#185FA5;}
+.s-sub{font-size:11px;color:#999;margin-top:2px;}
+
+.prog-wrap{margin-top:10px;}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:4px;}
+.prog-bg{height:8px;background:#f0f0ee;border-radius:99px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:99px;transition:width 0.4s;}
+
+.chart-wrap{background:#fff;border-radius:12px;padding:14px;border:1px solid #e5e5e5;margin-bottom:12px;}
+.chart-title{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px;}
+.chart-bars{display:flex;align-items:flex-end;gap:4px;height:80px;}
+.chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.chart-bar{width:100%;border-radius:4px 4px 0 0;min-height:2px;}
+.chart-bar.receita{background:#185FA5;}
+.chart-bar.despesa{background:#1a1a1a;}
+.chart-bar-label{font-size:9px;color:#999;text-align:center;}
+.chart-legend{display:flex;gap:12px;margin-top:10px;}
+.chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#666;}
+.chart-legend-dot{width:8px;height:8px;border-radius:2px;}
+
+.day-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.day-card{border-radius:12px;overflow:hidden;border:1px solid #e5e5e5;}
+.day-header{padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}
+.day-header-16{background:#185FA5;}
+.day-header-25{background:#BA7517;}
+.day-header span{font-size:12px;font-weight:500;color:#fff;}
+.day-body{background:#fff;padding:6px 0;}
+.day-row{padding:5px 12px;display:flex;justify-content:space-between;font-size:11px;border-bottom:1px solid #f5f5f5;}
+.day-row:last-child{border-bottom:none;}
+.day-row-label{color:#888;}
+.day-row-val{font-weight:500;}
+.day-row-val.green{color:#2d7a2d;}
+.day-row-val.red{color:#a32d2d;}
+
+.section{padding:0 1rem 2rem;}
+.form-card{background:#fff;border-radius:12px;padding:1.25rem;margin-bottom:1rem;border:1px solid #e5e5e5;}
+.form-title{font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;}
+.field{margin-bottom:10px;}
+label{font-size:12px;color:#666;display:block;margin-bottom:4px;}
+input[type=text],input[type=number],select{width:100%;padding:9px 11px;font-size:14px;border:1px solid #ddd;border-radius:8px;background:#fafafa;color:#1a1a1a;font-family:inherit;outline:none;}
+input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;}
+.date-toggle{display:flex;gap:8px;margin-bottom:10px;}
+.date-btn{flex:1;padding:9px;font-size:13px;font-weight:500;border:2px solid #ddd;border-radius:8px;background:#f5f5f3;color:#888;cursor:pointer;font-family:inherit;transition:all 0.15s;}
+.date-btn-16.sel{background:#185FA5;border-color:#0C447C;color:#fff;}
+.date-btn-25.sel{background:#BA7517;border-color:#854F0B;color:#fff;}
+.subtotal-preview{display:flex;align-items:center;justify-content:space-between;background:#f5f5f3;border-radius:8px;padding:10px 14px;margin-top:8px;}
+.subtotal-preview span{font-size:12px;color:#666;}
+.subtotal-preview strong{font-size:16px;font-weight:500;}
+.btn-add{width:100%;padding:10px;font-size:14px;font-weight:500;border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:inherit;margin-top:10px;}
+.btn-add.receita{background:#185FA5;}
+.btn-add.despesa{background:#1a1a1a;}
+.btn-add:active{opacity:0.85;}
+
+.list-item{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:0.9rem 1.1rem;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.list-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.list-meta{font-size:11px;color:#888;margin-top:2px;}
+.badge{display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:99px;margin-left:5px;vertical-align:middle;}
+.badge-16{background:#185FA5;color:#fff;}
+.badge-25{background:#BA7517;color:#fff;}
+.list-val{font-size:13px;font-weight:500;white-space:nowrap;}
+.btn-del{background:none;border:none;cursor:pointer;font-size:14px;color:#ccc;padding:0 0 0 6px;}
+.btn-del:hover{color:#e24b4a;}
+.empty{text-align:center;padding:2rem;font-size:13px;color:#bbb;}
+
+.goal-card{background:#fff;border-radius:12px;padding:1.25rem;margin-bottom:1rem;border:1px solid #e5e5e5;}
+.delta-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px;}
+.delta-box{border-radius:8px;padding:11px 14px;}
+.delta-box.neutral{background:#f5f5f3;}
+.delta-box.pos{background:#eaf3de;}
+.delta-box.neg{background:#fcebeb;}
+.delta-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;}
+.delta-box.neutral .delta-label,.delta-box.neutral .delta-val,.delta-box.neutral .delta-sub{color:#888;}
+.delta-box.pos .delta-label,.delta-box.pos .delta-val,.delta-box.pos .delta-sub{color:#3b6d11;}
+.delta-box.neg .delta-label,.delta-box.neg .delta-val,.delta-box.neg .delta-sub{color:#a32d2d;}
+.delta-val{font-size:15px;font-weight:500;}
+.delta-sub{font-size:10px;margin-top:2px;}
+
+.hidden{display:none!important;}
 </style>
+
 </head>
 <body>
-<div class="container">
-  <h1>Calculadora de projetos</h1>
-  <p class="sub">Adicione seus trabalhos e acompanhe sua meta</p>
 
-  <div class="card">
-    <div class="card-title">Novo projeto</div>
-    <div style="margin-bottom:10px">
-      <label>Descrição do trabalho</label>
-      <input type="text" id="desc" placeholder="Ex: Desenvolvimento site XYZ" />
-    </div>
+<div class="nav">
+  <button class="btn-nav-back hidden" id="btn-nav-back" onclick="goTo('home')">←</button>
+  <span class="nav-title" id="nav-title">💰 Finanças</span>
+</div>
+
+<!-- HOME -->
+
+<div id="page-home" class="home">
+  <div class="home-title">Olá 👋</div>
+  <div class="home-sub">Gerencie suas receitas e despesas</div>
+  <div class="home-btns">
+    <button class="home-btn home-btn-receita" onclick="goTo('receita')">
+      <div class="home-btn-icon">📈</div>
+      <span class="home-btn-label">Entradas</span>
+      <div class="home-btn-title">Receitas</div>
+    </button>
+    <button class="home-btn home-btn-despesa" onclick="goTo('despesa')">
+      <div class="home-btn-icon">📉</div>
+      <span class="home-btn-label">Saídas</span>
+      <div class="home-btn-title">Despesas</div>
+    </button>
+  </div>
+  <div id="home-summary"></div>
+</div>
+
+<!-- RECEITAS -->
+
+<div id="page-receita" class="section hidden">
+  <div style="height:1rem"></div>
+  <div class="form-card">
+    <div class="form-title">Novo projeto</div>
+    <div class="field"><label>Descrição</label><input type="text" id="r-desc" placeholder="Ex: Desenvolvimento site XYZ"/></div>
     <div class="grid3">
-      <div><label>Taxa / hora (R$)</label><input type="number" id="taxa" placeholder="150" min="0" step="0.01" oninput="updatePreview()" /></div>
-      <div><label>Horas por dia</label><input type="number" id="horas" placeholder="8" min="0" step="0.5" oninput="updatePreview()" /></div>
-      <div><label>Dias úteis</label><input type="number" id="dias" placeholder="22" min="0" step="1" oninput="updatePreview()" /></div>
+      <div><label>Taxa/hora (R$)</label><input type="number" id="r-taxa" placeholder="150" min="0" step="0.01" oninput="recalcPreview()"/></div>
+      <div><label>Horas/dia</label><input type="number" id="r-horas" placeholder="8" min="0" step="0.5" oninput="recalcPreview()"/></div>
+      <div><label>Dias úteis</label><input type="number" id="r-dias" placeholder="22" min="0" step="1" oninput="recalcPreview()"/></div>
     </div>
-    <span class="date-label">Data de pagamento</span>
-    <div class="date-toggle">
-      <button class="date-btn date-btn-16 selected" id="btn-16" onclick="selectDate(16)">Dia 16</button>
-      <button class="date-btn date-btn-25" id="btn-25" onclick="selectDate(25)">Dia 25</button>
-    </div>
-    <div class="subtotal-preview">
-      <span>Subtotal estimado</span>
-      <strong id="preview">R$ 0,00</strong>
-    </div>
-    <button class="btn-add" onclick="addProject()">+ Adicionar projeto</button>
-  </div>
-
-  <div id="section-results" style="display:none">
-    <div class="divider"></div>
-    <div id="all-projects" style="margin-bottom:1rem"></div>
-    <div class="results-grid">
-      <div class="pay-column">
-        <div class="pay-header pay-header-16">
-          <span class="pay-day">Dia 16</span>
-          <span class="pay-total" id="col-total-16">R$ 0,00</span>
-        </div>
-        <div class="pay-items" id="col-items-16"><div class="pay-empty">Nenhum projeto</div></div>
-      </div>
-      <div class="pay-column">
-        <div class="pay-header pay-header-25">
-          <span class="pay-day">Dia 25</span>
-          <span class="pay-total" id="col-total-25">R$ 0,00</span>
-        </div>
-        <div class="pay-items" id="col-items-25"><div class="pay-empty">Nenhum projeto</div></div>
-      </div>
-    </div>
-    <div class="total-bar">
-      <span class="total-bar-label">Total a receber</span>
-      <span class="total-bar-val" id="total-geral">R$ 0,00</span>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Meta e hora extra</div>
     <div class="grid2">
-      <div><label>Meta (R$)</label><input type="number" id="meta" placeholder="40000" min="0" step="100" oninput="updateGoal()" /></div>
-      <div><label>Taxa hora extra (R$)</label><input type="number" id="taxa-extra" placeholder="160" min="0" step="0.01" oninput="updateGoal()" /></div>
+      <div><label>Mês</label>
+        <select id="r-mes"><option value="">-- Mês --</option>
+          <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
+          <option>Maio</option><option>Junho</option><option>Julho</option><option>Agosto</option>
+          <option>Setembro</option><option>Outubro</option><option>Novembro</option><option>Dezembro</option>
+        </select>
+      </div>
+      <div><label>Ano</label><input type="number" id="r-ano" placeholder="2026" min="2020" max="2099" step="1"/></div>
     </div>
-    <div class="delta-row" id="delta-row" style="display:none">
-      <div class="delta-box neutral"><div class="delta-label">Meta</div><div class="delta-val" id="val-meta">—</div></div>
-      <div class="delta-box neutral" id="box-delta"><div class="delta-label">Delta</div><div class="delta-val" id="val-delta">—</div><div class="delta-sub" id="sub-delta">—</div></div>
-      <div class="delta-box neutral" id="box-extra"><div class="delta-label">Horas extras</div><div class="delta-val" id="val-extra">—</div><div class="delta-sub" id="sub-extra">—</div></div>
+    <label>Data de pagamento</label>
+    <div class="date-toggle">
+      <button class="date-btn date-btn-16 sel" id="r-btn16" onclick="selDate('r',16)">Dia 16</button>
+      <button class="date-btn date-btn-25" id="r-btn25" onclick="selDate('r',25)">Dia 25</button>
     </div>
-    <div class="progress-wrap" id="progress-wrap" style="display:none">
-      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
-      <div class="progress-label"><span id="progress-pct">0%</span><span id="progress-rest"></span></div>
+    <div class="subtotal-preview"><span>Subtotal estimado</span><strong id="r-preview">R$ 0,00</strong></div>
+    <button class="btn-add receita" onclick="addReceita()">+ Adicionar receita</button>
+  </div>
+  <div id="r-list"></div>
+
+  <div id="r-meta-section" class="goal-card hidden">
+    <div class="form-title">Meta e hora extra</div>
+    <div class="grid2">
+      <div><label>Meta (R$)</label><input type="number" id="r-meta" placeholder="40000" min="0" step="100" oninput="updateMeta()"/></div>
+      <div><label>Taxa hora extra (R$)</label><input type="number" id="r-taxa-extra" placeholder="160" min="0" step="0.01" oninput="updateMeta()"/></div>
+    </div>
+    <div class="delta-row" id="r-delta-row" style="display:none">
+      <div class="delta-box neutral"><div class="delta-label">Meta</div><div class="delta-val" id="r-val-meta">—</div></div>
+      <div class="delta-box neutral" id="r-box-delta"><div class="delta-label">Delta</div><div class="delta-val" id="r-val-delta">—</div><div class="delta-sub" id="r-sub-delta">—</div></div>
+      <div class="delta-box neutral" id="r-box-extra"><div class="delta-label">Horas extras</div><div class="delta-val" id="r-val-extra">—</div><div class="delta-sub" id="r-sub-extra">—</div></div>
     </div>
   </div>
+</div>
 
-<button class="btn-export" id="btn-export" style="display:none" onclick="exportText()">Exportar resumo como texto</button>
+<!-- DESPESAS -->
 
+<div id="page-despesa" class="section hidden">
+  <div style="height:1rem"></div>
+  <div class="form-card">
+    <div class="form-title">Nova despesa</div>
+    <div class="field"><label>Descrição</label><input type="text" id="d-desc" placeholder="Ex: Aluguel, Conta de luz..."/></div>
+    <div class="field"><label>Valor (R$)</label><input type="number" id="d-valor" placeholder="0,00" min="0" step="0.01"/></div>
+    <div class="grid2">
+      <div><label>Mês</label>
+        <select id="d-mes"><option value="">-- Mês --</option>
+          <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
+          <option>Maio</option><option>Junho</option><option>Julho</option><option>Agosto</option>
+          <option>Setembro</option><option>Outubro</option><option>Novembro</option><option>Dezembro</option>
+        </select>
+      </div>
+      <div><label>Ano</label><input type="number" id="d-ano" placeholder="2026" min="2020" max="2099" step="1"/></div>
+    </div>
+    <label>Data de pagamento</label>
+    <div class="date-toggle">
+      <button class="date-btn date-btn-16 sel" id="d-btn16" onclick="selDate('d',16)">Dia 16</button>
+      <button class="date-btn date-btn-25" id="d-btn25" onclick="selDate('d',25)">Dia 25</button>
+    </div>
+    <button class="btn-add despesa" onclick="addDespesa()">+ Adicionar despesa</button>
+  </div>
+  <div id="d-list"></div>
 </div>
 
 <script>
-let projects = [];
-let selectedDate = 16;
+let receitas=[],despesas=[],rDate=16,dDate=16;
 
-function fmt(v) { return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
-function calcSub(t,h,d) { return (parseFloat(t)||0)*(parseFloat(h)||0)*(parseFloat(d)||0); }
-function getTotal() { return projects.reduce((a,p)=>a+p.sub,0); }
+function fmt(v){return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function calcSub(t,h,d){return(parseFloat(t)||0)*(parseFloat(h)||0)*(parseFloat(d)||0);}
+function getTotalR(){return receitas.reduce((a,p)=>a+p.sub,0);}
+function getTotalD(){return despesas.reduce((a,p)=>a+p.valor,0);}
 
-function selectDate(d) {
-  selectedDate = d;
-  document.getElementById('btn-16').className = 'date-btn date-btn-16' + (d===16?' selected':'');
-  document.getElementById('btn-25').className = 'date-btn date-btn-25' + (d===25?' selected':'');
+function goTo(page){
+  ['home','receita','despesa'].forEach(p=>document.getElementById('page-'+p).classList.add('hidden'));
+  document.getElementById('page-'+page).classList.remove('hidden');
+  const back=document.getElementById('btn-nav-back');
+  if(page==='home'){
+    back.classList.add('hidden');
+    document.getElementById('nav-title').textContent='💰 Finanças';
+    renderHome();
+  } else {
+    back.classList.remove('hidden');
+    document.getElementById('nav-title').textContent=page==='receita'?'📈 Receitas':'📉 Despesas';
+  }
 }
 
-function updatePreview() {
-  document.getElementById('preview').textContent = fmt(calcSub(
-    document.getElementById('taxa').value,
-    document.getElementById('horas').value,
-    document.getElementById('dias').value
+function selDate(prefix,d){
+  if(prefix==='r') rDate=d; else dDate=d;
+  document.getElementById(prefix+'-btn16').className='date-btn date-btn-16'+(d===16?' sel':'');
+  document.getElementById(prefix+'-btn25').className='date-btn date-btn-25'+(d===25?' sel':'');
+}
+
+function recalcPreview(){
+  document.getElementById('r-preview').textContent=fmt(calcSub(
+    document.getElementById('r-taxa').value,
+    document.getElementById('r-horas').value,
+    document.getElementById('r-dias').value
   ));
 }
 
-function addProject() {
-  const desc = document.getElementById('desc').value.trim();
-  const taxa = parseFloat(document.getElementById('taxa').value)||0;
-  const horas = parseFloat(document.getElementById('horas').value)||0;
-  const dias = parseInt(document.getElementById('dias').value)||0;
-  if (!desc) { document.getElementById('desc').focus(); return; }
-  if (!taxa||!horas||!dias) return;
-  projects.push({id:Date.now(),desc,taxa,horas,dias,sub:calcSub(taxa,horas,dias),date:selectedDate});
-  render();
-  ['desc','taxa','horas','dias'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('preview').textContent='R$ 0,00';
-  document.getElementById('desc').focus();
+function addReceita(){
+  const desc=document.getElementById('r-desc').value.trim();
+  const taxa=parseFloat(document.getElementById('r-taxa').value)||0;
+  const horas=parseFloat(document.getElementById('r-horas').value)||0;
+  const dias=parseInt(document.getElementById('r-dias').value)||0;
+  const mes=document.getElementById('r-mes').value;
+  const ano=document.getElementById('r-ano').value;
+  if(!desc){document.getElementById('r-desc').focus();return;}
+  if(!taxa||!horas||!dias)return;
+  receitas.push({id:Date.now(),desc,taxa,horas,dias,sub:calcSub(taxa,horas,dias),date:rDate,mes,ano});
+  renderReceitas();
+  ['r-desc','r-taxa','r-horas','r-dias'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('r-preview').textContent='R$ 0,00';
+  document.getElementById('r-desc').focus();
 }
 
-function removeProject(id) { projects=projects.filter(p=>p.id!==id); render(); }
+function addDespesa(){
+  const desc=document.getElementById('d-desc').value.trim();
+  const valor=parseFloat(document.getElementById('d-valor').value)||0;
+  const mes=document.getElementById('d-mes').value;
+  const ano=document.getElementById('d-ano').value;
+  if(!desc){document.getElementById('d-desc').focus();return;}
+  if(!valor)return;
+  despesas.push({id:Date.now(),desc,valor,date:dDate,mes,ano});
+  renderDespesas();
+  ['d-desc','d-valor'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('d-desc').focus();
+}
 
-function render() {
-  const show = projects.length > 0;
-  document.getElementById('section-results').style.display = show?'block':'none';
-  document.getElementById('btn-export').style.display = show?'block':'none';
-  if (!show) { updateGoal(); return; }
+function removeReceita(id){receitas=receitas.filter(p=>p.id!==id);renderReceitas();}
+function removeDespesa(id){despesas=despesas.filter(p=>p.id!==id);renderDespesas();}
 
-  document.getElementById('all-projects').innerHTML = projects.map(p => {
-    const th = (p.horas*p.dias).toLocaleString('pt-BR',{maximumFractionDigits:1});
-    return `<div class="project-item">
+function renderReceitas(){
+  const el=document.getElementById('r-list');
+  const meta=document.getElementById('r-meta-section');
+  if(!receitas.length){el.innerHTML='<div class="empty">Nenhuma receita adicionada.</div>';meta.classList.add('hidden');return;}
+  meta.classList.remove('hidden');
+  el.innerHTML=receitas.map(p=>{
+    const th=(p.horas*p.dias).toLocaleString('pt-BR',{maximumFractionDigits:1});
+    const periodo=p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
+    return`<div class="list-item">
       <div style="flex:1;min-width:0">
-        <div class="project-name">${p.desc}<span class="badge badge-${p.date}">dia ${p.date}</span></div>
-        <div class="project-meta">R$ ${p.taxa.toLocaleString('pt-BR',{minimumFractionDigits:2})}/h · ${p.horas}h/dia · ${p.dias} dias · ${th}h</div>
+        <div class="list-name">${p.desc}<span class="badge badge-${p.date}">dia ${p.date}</span></div>
+        <div class="list-meta">R$${p.taxa.toLocaleString('pt-BR',{minimumFractionDigits:2})}/h · ${p.horas}h/dia · ${p.dias}d · ${th}h${periodo?' · '+periodo:''}</div>
       </div>
       <div style="display:flex;align-items:center;gap:4px">
-        <span class="project-value">${fmt(p.sub)}</span>
-        <button class="btn-del" onclick="removeProject(${p.id})">✕</button>
+        <span class="list-val">${fmt(p.sub)}</span>
+        <button class="btn-del" onclick="removeReceita(${p.id})">✕</button>
       </div>
     </div>`;
   }).join('');
-
-  const p16=projects.filter(p=>p.date===16), p25=projects.filter(p=>p.date===25);
-  document.getElementById('col-total-16').textContent=fmt(p16.reduce((a,p)=>a+p.sub,0));
-  document.getElementById('col-total-25').textContent=fmt(p25.reduce((a,p)=>a+p.sub,0));
-  document.getElementById('col-items-16').innerHTML=p16.length
-    ?p16.map(p=>`<div class="pay-item"><span class="pay-item-name">${p.desc}</span><span class="pay-item-val">${fmt(p.sub)}</span></div>`).join('')
-    :'<div class="pay-empty">Nenhum projeto</div>';
-  document.getElementById('col-items-25').innerHTML=p25.length
-    ?p25.map(p=>`<div class="pay-item"><span class="pay-item-name">${p.desc}</span><span class="pay-item-val">${fmt(p.sub)}</span></div>`).join('')
-    :'<div class="pay-empty">Nenhum projeto</div>';
-  document.getElementById('total-geral').textContent=fmt(getTotal());
-  updateGoal();
+  updateMeta();
 }
 
-function updateGoal() {
-  const meta=parseFloat(document.getElementById('meta').value)||0;
-  const taxaExtra=parseFloat(document.getElementById('taxa-extra').value)||0;
-  const total=getTotal();
-  if (!meta) {
-    document.getElementById('delta-row').style.display='none';
-    document.getElementById('progress-wrap').style.display='none';
-    return;
-  }
-  document.getElementById('delta-row').style.display='grid';
-  document.getElementById('progress-wrap').style.display='block';
-  const delta=meta-total, atingiu=delta<=0;
-  document.getElementById('val-meta').textContent=fmt(meta);
-  document.getElementById('box-delta').className='delta-box '+(atingiu?'positive':'negative');
-  document.getElementById('val-delta').textContent=fmt(Math.abs(delta));
-  document.getElementById('sub-delta').textContent=atingiu?'acima da meta':'faltando';
-  const bx=document.getElementById('box-extra');
-  if (!atingiu&&taxaExtra>0) {
-    bx.className='delta-box negative';
-    document.getElementById('val-extra').textContent=(delta/taxaExtra).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'h';
-    document.getElementById('sub-extra').textContent='a R$ '+taxaExtra.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h';
-  } else if (atingiu) {
-    bx.className='delta-box positive';
-    document.getElementById('val-extra').textContent='Meta atingida';
-    document.getElementById('sub-extra').textContent='';
+function renderDespesas(){
+  const el=document.getElementById('d-list');
+  if(!despesas.length){el.innerHTML='<div class="empty">Nenhuma despesa adicionada.</div>';return;}
+  el.innerHTML=despesas.map(p=>{
+    const periodo=p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
+    return`<div class="list-item">
+      <div style="flex:1;min-width:0">
+        <div class="list-name">${p.desc}<span class="badge badge-${p.date}">dia ${p.date}</span></div>
+        <div class="list-meta">${periodo||'Sem período'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <span class="list-val" style="color:#a32d2d">${fmt(p.valor)}</span>
+        <button class="btn-del" onclick="removeDespesa(${p.id})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateMeta(){
+  const meta=parseFloat(document.getElementById('r-meta').value)||0;
+  const taxaExtra=parseFloat(document.getElementById('r-taxa-extra').value)||0;
+  const total=getTotalR();
+  const dr=document.getElementById('r-delta-row');
+  if(!meta){dr.style.display='none';return;}
+  dr.style.display='grid';
+  const delta=meta-total,atingiu=delta<=0;
+  document.getElementById('r-val-meta').textContent=fmt(meta);
+  document.getElementById('r-box-delta').className='delta-box '+(atingiu?'pos':'neg');
+  document.getElementById('r-val-delta').textContent=fmt(Math.abs(delta));
+  document.getElementById('r-sub-delta').textContent=atingiu?'acima da meta':'faltando';
+  const bx=document.getElementById('r-box-extra');
+  if(!atingiu&&taxaExtra>0){
+    bx.className='delta-box neg';
+    document.getElementById('r-val-extra').textContent=(delta/taxaExtra).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'h';
+    document.getElementById('r-sub-extra').textContent='a R$'+taxaExtra.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h';
+  } else if(atingiu){
+    bx.className='delta-box pos';
+    document.getElementById('r-val-extra').textContent='Meta atingida';
+    document.getElementById('r-sub-extra').textContent='';
   } else {
     bx.className='delta-box neutral';
-    document.getElementById('val-extra').textContent='—';
-    document.getElementById('sub-extra').textContent='informe taxa extra';
+    document.getElementById('r-val-extra').textContent='—';
+    document.getElementById('r-sub-extra').textContent='informe taxa extra';
   }
-  const pct=Math.min(100,total/meta*100);
-  const fill=document.getElementById('progress-fill');
-  fill.style.width=pct.toFixed(1)+'%';
-  fill.style.background=atingiu?'#3b6d11':(pct>=75?'#BA7517':'#888');
-  document.getElementById('progress-pct').textContent=pct.toFixed(1)+'%';
-  document.getElementById('progress-rest').textContent=atingiu?'Meta batida!':fmt(total)+' de '+fmt(meta);
 }
 
-function exportText() {
-  const meta=parseFloat(document.getElementById('meta').value)||0;
-  const taxaExtra=parseFloat(document.getElementById('taxa-extra').value)||0;
-  const total=getTotal();
-  const p16=projects.filter(p=>p.date===16), p25=projects.filter(p=>p.date===25);
-  let txt='RESUMO DE PROJETOS\n'+'='.repeat(34)+'\n\n';
-  txt+='PAGAMENTO DIA 16\n';
-  p16.length?p16.forEach(p=>{txt+=`  · ${p.desc}: ${fmt(p.sub)}\n`}):(txt+='  Nenhum projeto\n');
-  txt+=`  Total dia 16: ${fmt(p16.reduce((a,p)=>a+p.sub,0))}\n\n`;
-  txt+='PAGAMENTO DIA 25\n';
-  p25.length?p25.forEach(p=>{txt+=`  · ${p.desc}: ${fmt(p.sub)}\n`}):(txt+='  Nenhum projeto\n');
-  txt+=`  Total dia 25: ${fmt(p25.reduce((a,p)=>a+p.sub,0))}\n\n`;
-  txt+='='.repeat(34)+'\nTOTAL A RECEBER: '+fmt(total)+'\n';
-  if (meta) {
-    const d=meta-total;
-    txt+=`\nMETA: ${fmt(meta)}\nDelta: ${d>0?'-'+fmt(d)+' (faltando)':'+'+fmt(Math.abs(d))+' (acima da meta)'}\n`;
-    if(d>0&&taxaExtra>0) txt+=`Horas extras: ${(d/taxaExtra).toFixed(2).replace('.',',')}h @ R$ ${taxaExtra.toFixed(2).replace('.',',')} /h\n`;
+function renderHome(){
+  const totalR=getTotalR(),totalD=getTotalD(),saldo=totalR-totalD;
+  const r16=receitas.filter(p=>p.date===16).reduce((a,p)=>a+p.sub,0);
+  const r25=receitas.filter(p=>p.date===25).reduce((a,p)=>a+p.sub,0);
+  const d16=despesas.filter(p=>p.date===16).reduce((a,p)=>a+p.valor,0);
+  const d25=despesas.filter(p=>p.date===25).reduce((a,p)=>a+p.valor,0);
+
+  const mesesData={};
+  receitas.forEach(p=>{if(p.mes){if(!mesesData[p.mes])mesesData[p.mes]={r:0,d:0};mesesData[p.mes].r+=p.sub;}});
+  despesas.forEach(p=>{if(p.mes){if(!mesesData[p.mes])mesesData[p.mes]={r:0,d:0};mesesData[p.mes].d+=p.valor;}});
+  const mesesKeys=Object.keys(mesesData).slice(-6);
+  const maxVal=Math.max(1,...mesesKeys.map(m=>Math.max(mesesData[m].r,mesesData[m].d)));
+  const pctD=totalR>0?Math.min(100,(totalD/totalR)*100):0;
+
+  if(!totalR&&!totalD){
+    document.getElementById('home-summary').innerHTML=`<div class="empty" style="background:#fff;border-radius:12px;border:1px solid #e5e5e5">Adicione receitas e despesas para ver o resumo.</div>`;
+    return;
   }
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'}));
-  a.download='resumo-projetos.txt';
-  a.click();
+
+  document.getElementById('home-summary').innerHTML=`
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="s-label">Receitas</div>
+        <div class="s-val blue">${fmt(totalR)}</div>
+        <div class="s-sub">${receitas.length} projeto${receitas.length!==1?'s':''}</div>
+      </div>
+      <div class="summary-card">
+        <div class="s-label">Despesas</div>
+        <div class="s-val red">${fmt(totalD)}</div>
+        <div class="s-sub">${despesas.length} item${despesas.length!==1?'s':''}</div>
+      </div>
+      <div class="summary-card full">
+        <div class="s-label">Saldo</div>
+        <div class="s-val ${saldo>=0?'green':'red'}">${fmt(saldo)}</div>
+        <div class="prog-wrap">
+          <div class="prog-label"><span>Despesas vs receita</span><span>${pctD.toFixed(1)}%</span></div>
+          <div class="prog-bg"><div class="prog-fill" style="width:${pctD.toFixed(1)}%;background:${pctD>80?'#a32d2d':pctD>50?'#BA7517':'#2d7a2d'}"></div></div>
+        </div>
+      </div>
+    </div>
+
+    ${mesesKeys.length>0?`
+    <div class="chart-wrap">
+      <div class="chart-title">Receitas vs Despesas por mês</div>
+      <div class="chart-bars">
+        ${mesesKeys.map(m=>`
+          <div class="chart-bar-wrap">
+            <div class="chart-bar receita" style="height:${Math.round((mesesData[m].r/maxVal)*70)}px"></div>
+            <div class="chart-bar-label">${m.substring(0,3)}</div>
+          </div>
+          <div class="chart-bar-wrap">
+            <div class="chart-bar despesa" style="height:${Math.round((mesesData[m].d/maxVal)*70)}px"></div>
+            <div class="chart-bar-label"></div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="chart-legend">
+        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#185FA5"></div>Receita</div>
+        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#1a1a1a"></div>Despesa</div>
+      </div>
+    </div>`:''}
+
+    <div class="day-split">
+      <div class="day-card">
+        <div class="day-header day-header-16"><span>Dia 16</span><span>${fmt(r16-d16)}</span></div>
+        <div class="day-body">
+          <div class="day-row"><span class="day-row-label">Receita</span><span class="day-row-val">${fmt(r16)}</span></div>
+          <div class="day-row"><span class="day-row-label">Despesa</span><span class="day-row-val red">${fmt(d16)}</span></div>
+          <div class="day-row"><span class="day-row-label">Saldo</span><span class="day-row-val ${(r16-d16)>=0?'green':'red'}">${fmt(r16-d16)}</span></div>
+        </div>
+      </div>
+      <div class="day-card">
+        <div class="day-header day-header-25"><span>Dia 25</span><span>${fmt(r25-d25)}</span></div>
+        <div class="day-body">
+          <div class="day-row"><span class="day-row-label">Receita</span><span class="day-row-val">${fmt(r25)}</span></div>
+          <div class="day-row"><span class="day-row-label">Despesa</span><span class="day-row-val red">${fmt(d25)}</span></div>
+          <div class="day-row"><span class="day-row-label">Saldo</span><span class="day-row-val ${(r25-d25)>=0?'green':'red'}">${fmt(r25-d25)}</span></div>
+        </div>
+      </div>
+    </div>`;
 }
+
+renderHome();
 </script>
 
 </body>
