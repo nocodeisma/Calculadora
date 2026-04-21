@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
@@ -122,7 +121,6 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
 </div>
 
 <!-- HOME -->
-
 <div id="page-home" class="home">
   <div class="home-title">Olá 👋</div>
   <div class="home-sub">Gerencie suas receitas e despesas</div>
@@ -142,7 +140,6 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
 </div>
 
 <!-- RECEITAS -->
-
 <div id="page-receita" class="section hidden">
   <div style="height:1rem"></div>
   <div class="form-card">
@@ -187,7 +184,6 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
 </div>
 
 <!-- DESPESAS -->
-
 <div id="page-despesa" class="section hidden">
   <div style="height:1rem"></div>
   <div class="form-card">
@@ -508,6 +504,5 @@ onSnapshot(query(collection(db,'despesas'),orderBy('criadoEm','asc')), snap=>{
 }, ()=>setSynced(false));
 
 </script>
-
 </body>
 </html>
