@@ -397,24 +397,94 @@ function renderDespesas(){
   el.innerHTML=html;
 }
 
+function toggleMes(key){
+  var el=document.getElementById('hist-body-'+key);
+  var arr=document.getElementById('hist-arrow-'+key);
+  if(el.style.display==='none'){el.style.display='block';arr.textContent='▲';}
+  else{el.style.display='none';arr.textContent='▼';}
+}
+
 function renderHistorico(){
   var el=document.getElementById('hist-list');
-  if(!historico.length){el.innerHTML='<div class="empty" style="background:#fff;border-radius:12px;border:1px solid #e5e5e5;padding:2rem">Nenhum mês fechado ainda.</div>';return;}
-  var meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  var sorted=historico.slice().sort(function(a,b){
-    var ai=parseInt(a.ano)*12+meses.indexOf(a.mes);
-    var bi=parseInt(b.ano)*12+meses.indexOf(b.mes);
+  if(!historico.length){el.innerHTML='<div class="empty" style="background:#fff;border-radius:12px;border:1px solid #e5e5e5;padding:2rem">Nenhum mês fechado ainda.<br><br><small style="color:#aaa">Use o botão Fechar Mês em Receitas ou Despesas para registrar.</small></div>';return;}
+  var MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  // Agrupar por mes+ano
+  var grupos={};
+  historico.forEach(function(h){
+    var key=h.mes+'|'+h.ano;
+    if(!grupos[key]) grupos[key]={mes:h.mes,ano:h.ano,receitas:[],despesas:[]};
+    if(h.tipo==='receita') grupos[key].receitas.push(h);
+    else grupos[key].despesas.push(h);
+  });
+
+  // Ordenar grupos do mais recente pro mais antigo
+  var keys=Object.keys(grupos).sort(function(a,b){
+    var am=grupos[a], bm=grupos[b];
+    var ai=parseInt(am.ano)*12+MESES.indexOf(am.mes);
+    var bi=parseInt(bm.ano)*12+MESES.indexOf(bm.mes);
     return bi-ai;
   });
-  el.innerHTML=sorted.map(function(h){
-    var cor=h.tipo==='receita'?'#185FA5':'#a32d2d';
-    var emoji=h.tipo==='receita'?'📈':'📉';
-    var label=h.tipo==='receita'?'Receitas':'Despesas';
-    var bg=h.tipo==='receita'?'#185FA5':'#1a1a1a';
-    var itensHtml=(h.itens||[]).map(function(i){
-      return'<div class="hist-item"><span>'+i.desc+'<span class="badge badge-'+i.date+'" style="margin-left:5px">dia '+i.date+'</span></span><span style="font-weight:500;color:'+cor+'">'+fmt(i.valor)+'</span></div>';
-    }).join('');
-    return'<div class="hist-card"><div class="hist-header" style="background:'+bg+'"><span>'+emoji+' '+label+' — '+h.mes+' '+h.ano+'</span><span style="color:#fff;font-size:13px">'+fmt(h.total)+'</span></div><div class="hist-body"><div class="hist-section-label">'+label+' realizadas</div>'+itensHtml+'<div class="hist-total"><span>Total</span><span style="color:'+cor+'">'+fmt(h.total)+'</span></div><button class="hist-del" onclick="removeHistorico(\''+h.id+'\')">Remover registro</button></div></div>';
+
+  el.innerHTML=keys.map(function(key){
+    var g=grupos[key];
+    var safeKey=key.replace('|','-');
+
+    var totalR=g.receitas.reduce(function(a,h){return a+h.total;},0);
+    var totalD=g.despesas.reduce(function(a,h){return a+h.total;},0);
+    var saldo=totalR-totalD;
+
+    // Detalhe receitas
+    var recHtml='';
+    if(g.receitas.length){
+      recHtml+='<div style="font-size:11px;font-weight:500;color:#185FA5;text-transform:uppercase;letter-spacing:0.05em;margin:12px 0 6px;">📈 Receitas</div>';
+      g.receitas.forEach(function(h){
+        recHtml+='<div style="background:#f0f6ff;border-radius:8px;padding:8px 12px;margin-bottom:6px;">';
+        (h.itens||[]).forEach(function(i){
+          recHtml+='<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid #dce8f8;"><span>'+i.desc+'<span class="badge badge-'+i.date+'" style="margin-left:5px">dia '+i.date+'</span></span><span style="font-weight:500;color:#185FA5">'+fmt(i.valor)+'</span></div>';
+        });
+        recHtml+='<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#185FA5;padding-top:6px;"><span>Total receitas</span><span>'+fmt(h.total)+'</span></div>';
+        recHtml+='<button class="hist-del" onclick="removeHistorico(\''+h.id+'\')" style="margin-top:6px;">Remover</button>';
+        recHtml+='</div>';
+      });
+    }
+
+    // Detalhe despesas
+    var despHtml='';
+    if(g.despesas.length){
+      despHtml+='<div style="font-size:11px;font-weight:500;color:#a32d2d;text-transform:uppercase;letter-spacing:0.05em;margin:12px 0 6px;">📉 Despesas</div>';
+      g.despesas.forEach(function(h){
+        despHtml+='<div style="background:#fff5f5;border-radius:8px;padding:8px 12px;margin-bottom:6px;">';
+        (h.itens||[]).forEach(function(i){
+          despHtml+='<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid #f5dada;"><span>'+i.desc+'<span class="badge badge-'+i.date+'" style="margin-left:5px">dia '+i.date+'</span></span><span style="font-weight:500;color:#a32d2d">'+fmt(i.valor)+'</span></div>';
+        });
+        despHtml+='<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#a32d2d;padding-top:6px;"><span>Total despesas</span><span>'+fmt(h.total)+'</span></div>';
+        despHtml+='<button class="hist-del" onclick="removeHistorico(\''+h.id+'\')" style="margin-top:6px;">Remover</button>';
+        despHtml+='</div>';
+      });
+    }
+
+    return '<div style="background:#fff;border-radius:12px;border:1px solid #e5e5e5;margin-bottom:10px;overflow:hidden;">'
+
+      // Header clicável
+      +'<div onclick="toggleMes(\''+safeKey+'\')" style="background:#1a1a1a;padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">'
+        +'<span style="color:#fff;font-size:15px;font-weight:500;">'+g.mes+' '+g.ano+'</span>'
+        +'<span id="hist-arrow-'+safeKey+'" style="color:#fff;font-size:12px;">▼</span>'
+      +'</div>'
+
+      // Resumo sempre visível
+      +'<div style="padding:12px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;border-bottom:1px solid #f0f0f0;">'
+        +'<div><div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Receitas</div><div style="font-size:14px;font-weight:500;color:#185FA5;">'+fmt(totalR)+'</div></div>'
+        +'<div><div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Despesas</div><div style="font-size:14px;font-weight:500;color:#a32d2d;">'+fmt(totalD)+'</div></div>'
+        +'<div><div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Saldo</div><div style="font-size:14px;font-weight:500;color:'+(saldo>=0?'#2d7a2d':'#a32d2d')+';">'+fmt(saldo)+'</div></div>'
+      +'</div>'
+
+      // Detalhe colapsável
+      +'<div id="hist-body-'+safeKey+'" style="display:none;padding:0 16px 14px;">'
+        +recHtml+despHtml
+      +'</div>'
+
+    +'</div>';
   }).join('');
 }
 
