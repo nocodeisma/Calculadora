@@ -426,7 +426,14 @@ function renderHistorico(){
     return bi-ai;
   });
 
-  el.innerHTML=keys.map(function(key){
+  // Totais por ano
+  var porAno={};
+  historico.forEach(function(h){ var ano=h.ano||'—'; if(!porAno[ano]) porAno[ano]={r:0,d:0}; if(h.tipo==='receita') porAno[ano].r+=h.total; else porAno[ano].d+=h.total; });
+  var anosOrd=Object.keys(porAno).sort(function(a,b){return parseInt(b)-parseInt(a);});
+  var anoHtml=anosOrd.map(function(ano){ var r=porAno[ano].r,d=porAno[ano].d,s=r-d; return '<div style="background:#fff;border-radius:12px;border:2px solid #5b3fa5;margin-bottom:10px;overflow:hidden;"><div style="background:#5b3fa5;padding:12px 16px;"><span style="color:#fff;font-size:15px;font-weight:500;">Total '+ano+'</span></div><div style="padding:14px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"><div><div style="font-size:10px;color:#888;text-transform:uppercase;margin-bottom:4px;">Receitas</div><div style="font-size:16px;font-weight:500;color:#185FA5;">'+fmt(r)+'</div></div><div><div style="font-size:10px;color:#888;text-transform:uppercase;margin-bottom:4px;">Despesas</div><div style="font-size:16px;font-weight:500;color:#a32d2d;">'+fmt(d)+'</div></div><div><div style="font-size:10px;color:#888;text-transform:uppercase;margin-bottom:4px;">Saldo</div><div style="font-size:16px;font-weight:500;color:'+(s>=0?'#2d7a2d':'#a32d2d')+';">'+fmt(s)+'</div></div></div></div>'; }).join('');
+  var divHtml='<div style="font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin:16px 0 8px;">Por mês</div>';
+  el.innerHTML=anoHtml+divHtml;
+  el.innerHTML+=keys.map(function(key){
     var g=grupos[key];
     var safeKey=key.replace('|','-');
 
