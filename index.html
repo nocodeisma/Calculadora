@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
@@ -10,6 +11,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .nav{background:#1a1a1a;display:flex;align-items:center;gap:10px;padding:0 16px;position:sticky;top:0;z-index:100;height:50px;}
 .btn-nav-back{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:0;line-height:1;}
 .nav-title{color:#fff;font-size:15px;font-weight:500;flex:1;}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#888;flex-shrink:0;transition:background 0.3s;}
+.sync-dot.ok{background:#4ade80;}
+.sync-dot.err{background:#f87171;}
 .home{padding:1.5rem 1rem 2rem;}
 .home-title{font-size:24px;font-weight:500;margin-bottom:4px;}
 .home-sub{font-size:13px;color:#666;margin-bottom:1.5rem;}
@@ -78,6 +82,7 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
 .btn-add.receita{background:#185FA5;}
 .btn-add.despesa{background:#1a1a1a;}
 .btn-add:active{opacity:0.85;}
+.btn-add:disabled{opacity:0.5;cursor:not-allowed;}
 .list-item{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:0.9rem 1.1rem;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .list-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .list-meta{font-size:11px;color:#888;margin-top:2px;}
@@ -100,14 +105,20 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
 .delta-box.neg .delta-label,.delta-box.neg .delta-val,.delta-box.neg .delta-sub{color:#a32d2d;}
 .delta-val{font-size:15px;font-weight:500;}
 .delta-sub{font-size:10px;margin-top:2px;}
+.loading{text-align:center;padding:2rem;font-size:13px;color:#888;}
 .hidden{display:none!important;}
 </style>
 </head>
 <body>
+
 <div class="nav">
   <button class="btn-nav-back hidden" id="btn-nav-back" onclick="goTo('home')">←</button>
   <span class="nav-title" id="nav-title">💰 Finanças</span>
+  <div class="sync-dot" id="sync-dot" title="Sincronizando..."></div>
 </div>
+
+<!-- HOME -->
+
 <div id="page-home" class="home">
   <div class="home-title">Olá 👋</div>
   <div class="home-sub">Gerencie suas receitas e despesas</div>
@@ -123,8 +134,11 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
       <div class="home-btn-title">Despesas</div>
     </button>
   </div>
-  <div id="home-summary"></div>
+  <div id="home-summary"><div class="loading">Conectando...</div></div>
 </div>
+
+<!-- RECEITAS -->
+
 <div id="page-receita" class="section hidden">
   <div style="height:1rem"></div>
   <div class="form-card">
@@ -151,9 +165,9 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
       <button class="date-btn date-btn-25" id="r-btn25" onclick="selDate('r',25)">Dia 25</button>
     </div>
     <div class="subtotal-preview"><span>Subtotal estimado</span><strong id="r-preview">R$ 0,00</strong></div>
-    <button class="btn-add receita" onclick="addReceita()">+ Adicionar receita</button>
+    <button class="btn-add receita" id="r-btn-add" onclick="addReceita()">+ Adicionar receita</button>
   </div>
-  <div id="r-list"></div>
+  <div id="r-list"><div class="loading">Carregando...</div></div>
   <div id="r-meta-section" class="goal-card hidden">
     <div class="form-title">Meta e hora extra</div>
     <div class="grid2">
@@ -167,6 +181,9 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
     </div>
   </div>
 </div>
+
+<!-- DESPESAS -->
+
 <div id="page-despesa" class="section hidden">
   <div style="height:1rem"></div>
   <div class="form-card">
@@ -188,103 +205,184 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
       <button class="date-btn date-btn-16 sel" id="d-btn16" onclick="selDate('d',16)">Dia 16</button>
       <button class="date-btn date-btn-25" id="d-btn25" onclick="selDate('d',25)">Dia 25</button>
     </div>
-    <button class="btn-add despesa" onclick="addDespesa()">+ Adicionar despesa</button>
+    <button class="btn-add despesa" id="d-btn-add" onclick="addDespesa()">+ Adicionar despesa</button>
   </div>
-  <div id="d-list"></div>
+  <div id="d-list"><div class="loading">Carregando...</div></div>
 </div>
-<script>
-let receitas=[],despesas=[],rDate=16,dDate=16;
-function fmt(v){return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
-function calcSub(t,h,d){return(parseFloat(t)||0)*(parseFloat(h)||0)*(parseFloat(d)||0);}
-function getTotalR(){return receitas.reduce((a,p)=>a+p.sub,0);}
-function getTotalD(){return despesas.reduce((a,p)=>a+p.valor,0);}
-function goTo(page){
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD_t1nhaoYlqTjOehAaGJyNpPfNt7Uv92g",
+  authDomain: "financeiro-f8dda.firebaseapp.com",
+  projectId: "financeiro-f8dda",
+  storageBucket: "financeiro-f8dda.firebasestorage.app",
+  messagingSenderId: "210397672861",
+  appId: "1:210397672861:web:d5f6a6207b26f4b95aeb74"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let receitas = [], despesas = [], rDate = 16, dDate = 16;
+
+const dot = document.getElementById('sync-dot');
+function setSynced(ok){ dot.className = 'sync-dot ' + (ok ? 'ok' : 'err'); }
+
+function fmt(v){ return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+function calcSub(t,h,d){ return (parseFloat(t)||0)*(parseFloat(h)||0)*(parseFloat(d)||0); }
+function getTotalR(){ return receitas.reduce((a,p)=>a+p.sub,0); }
+function getTotalD(){ return despesas.reduce((a,p)=>a+p.valor,0); }
+
+window.goTo = function(page){
   ['home','receita','despesa'].forEach(p=>document.getElementById('page-'+p).classList.add('hidden'));
   document.getElementById('page-'+page).classList.remove('hidden');
-  const back=document.getElementById('btn-nav-back');
-  if(page==='home'){back.classList.add('hidden');document.getElementById('nav-title').textContent='💰 Finanças';renderHome();}
-  else{back.classList.remove('hidden');document.getElementById('nav-title').textContent=page==='receita'?'📈 Receitas':'📉 Despesas';}
-}
-function selDate(prefix,d){
+  const back = document.getElementById('btn-nav-back');
+  if(page==='home'){
+    back.classList.add('hidden');
+    document.getElementById('nav-title').textContent='💰 Finanças';
+    renderHome();
+  } else {
+    back.classList.remove('hidden');
+    document.getElementById('nav-title').textContent = page==='receita'?'📈 Receitas':'📉 Despesas';
+  }
+};
+
+window.selDate = function(prefix, d){
   if(prefix==='r') rDate=d; else dDate=d;
   document.getElementById(prefix+'-btn16').className='date-btn date-btn-16'+(d===16?' sel':'');
   document.getElementById(prefix+'-btn25').className='date-btn date-btn-25'+(d===25?' sel':'');
-}
-function recalcPreview(){
-  document.getElementById('r-preview').textContent=fmt(calcSub(
+};
+
+window.recalcPreview = function(){
+  document.getElementById('r-preview').textContent = fmt(calcSub(
     document.getElementById('r-taxa').value,
     document.getElementById('r-horas').value,
     document.getElementById('r-dias').value
   ));
-}
-function addReceita(){
-  const desc=document.getElementById('r-desc').value.trim();
-  const taxa=parseFloat(document.getElementById('r-taxa').value)||0;
-  const horas=parseFloat(document.getElementById('r-horas').value)||0;
-  const dias=parseInt(document.getElementById('r-dias').value)||0;
-  const mes=document.getElementById('r-mes').value;
-  const ano=document.getElementById('r-ano').value;
-  if(!desc){document.getElementById('r-desc').focus();return;}
-  if(!taxa||!horas||!dias)return;
-  receitas.push({id:Date.now(),desc,taxa,horas,dias,sub:calcSub(taxa,horas,dias),date:rDate,mes,ano});
-  renderReceitas();
-  ['r-desc','r-taxa','r-horas','r-dias'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('r-preview').textContent='R$ 0,00';
-  document.getElementById('r-desc').focus();
-}
-function addDespesa(){
-  const desc=document.getElementById('d-desc').value.trim();
-  const valor=parseFloat(document.getElementById('d-valor').value)||0;
-  const mes=document.getElementById('d-mes').value;
-  const ano=document.getElementById('d-ano').value;
-  if(!desc){document.getElementById('d-desc').focus();return;}
-  if(!valor)return;
-  despesas.push({id:Date.now(),desc,valor,date:dDate,mes,ano});
-  renderDespesas();
-  ['d-desc','d-valor'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('d-desc').focus();
-}
-function removeReceita(id){receitas=receitas.filter(p=>p.id!==id);renderReceitas();}
-function removeDespesa(id){despesas=despesas.filter(p=>p.id!==id);renderDespesas();}
+};
+
+window.addReceita = async function(){
+  const desc = document.getElementById('r-desc').value.trim();
+  const taxa = parseFloat(document.getElementById('r-taxa').value)||0;
+  const horas = parseFloat(document.getElementById('r-horas').value)||0;
+  const dias = parseInt(document.getElementById('r-dias').value)||0;
+  const mes = document.getElementById('r-mes').value;
+  const ano = document.getElementById('r-ano').value;
+  if(!desc){ document.getElementById('r-desc').focus(); return; }
+  if(!taxa||!horas||!dias) return;
+  const btn = document.getElementById('r-btn-add');
+  btn.disabled = true;
+  try {
+    await addDoc(collection(db,'receitas'),{desc,taxa,horas,dias,sub:calcSub(taxa,horas,dias),date:rDate,mes,ano,criadoEm:serverTimestamp()});
+    ['r-desc','r-taxa','r-horas','r-dias'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('r-preview').textContent='R$ 0,00';
+    document.getElementById('r-desc').focus();
+    setSynced(true);
+  } catch(e){ setSynced(false); alert('Erro ao salvar: '+e.message); }
+  btn.disabled = false;
+};
+
+window.addDespesa = async function(){
+  const desc = document.getElementById('d-desc').value.trim();
+  const valor = parseFloat(document.getElementById('d-valor').value)||0;
+  const mes = document.getElementById('d-mes').value;
+  const ano = document.getElementById('d-ano').value;
+  if(!desc){ document.getElementById('d-desc').focus(); return; }
+  if(!valor) return;
+  const btn = document.getElementById('d-btn-add');
+  btn.disabled = true;
+  try {
+    await addDoc(collection(db,'despesas'),{desc,valor,date:dDate,mes,ano,criadoEm:serverTimestamp()});
+    ['d-desc','d-valor'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('d-desc').focus();
+    setSynced(true);
+  } catch(e){ setSynced(false); alert('Erro ao salvar: '+e.message); }
+  btn.disabled = false;
+};
+
+window.removeReceita = async function(id){
+  try { await deleteDoc(doc(db,'receitas',id)); setSynced(true); }
+  catch(e){ setSynced(false); }
+};
+
+window.removeDespesa = async function(id){
+  try { await deleteDoc(doc(db,'despesas',id)); setSynced(true); }
+  catch(e){ setSynced(false); }
+};
+
 function renderReceitas(){
-  const el=document.getElementById('r-list');
-  const meta=document.getElementById('r-meta-section');
-  if(!receitas.length){el.innerHTML='<div class="empty">Nenhuma receita adicionada.</div>';meta.classList.add('hidden');return;}
+  const el = document.getElementById('r-list');
+  const meta = document.getElementById('r-meta-section');
+  if(!receitas.length){ el.innerHTML='<div class="empty">Nenhuma receita adicionada.</div>'; meta.classList.add('hidden'); return; }
   meta.classList.remove('hidden');
-  el.innerHTML=receitas.map(p=>{
-    const th=(p.horas*p.dias).toLocaleString('pt-BR',{maximumFractionDigits:1});
-    const periodo=p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
-    return`<div class="list-item"><div style="flex:1;min-width:0"><div class="list-name">${p.desc}<span class="badge badge-${p.date}">dia ${p.date}</span></div><div class="list-meta">R$${p.taxa.toLocaleString('pt-BR',{minimumFractionDigits:2})}/h · ${p.horas}h/dia · ${p.dias}d · ${th}h${periodo?' · '+periodo:''}</div></div><div style="display:flex;align-items:center;gap:4px"><span class="list-val">${fmt(p.sub)}</span><button class="btn-del" onclick="removeReceita(${p.id})">✕</button></div></div>`;
+  el.innerHTML = receitas.map(p=>{
+    const th = (p.horas*p.dias).toLocaleString('pt-BR',{maximumFractionDigits:1});
+    const periodo = p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
+    return`<div class="list-item">
+      <div style="flex:1;min-width:0">
+        <div class="list-name">${p.desc}<span class="badge badge-${p.date}">dia ${p.date}</span></div>
+        <div class="list-meta">R$${p.taxa.toLocaleString('pt-BR',{minimumFractionDigits:2})}/h · ${p.horas}h/dia · ${p.dias}d · ${th}h${periodo?' · '+periodo:''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <span class="list-val">${fmt(p.sub)}</span>
+        <button class="btn-del" onclick="removeReceita('${p.id}')">✕</button>
+      </div>
+    </div>`;
   }).join('');
   updateMeta();
 }
+
 function renderDespesas(){
-  const el=document.getElementById('d-list');
-  if(!despesas.length){el.innerHTML='<div class="empty">Nenhuma despesa adicionada.</div>';return;}
-  el.innerHTML=despesas.map(p=>{
-    const periodo=p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
-    return`<div class="list-item"><div style="flex:1;min-width:0"><div class="list-name">${p.desc}<span class="badge badge-${p.date}">dia ${p.date}</span></div><div class="list-meta">${periodo||'Sem período'}</div></div><div style="display:flex;align-items:center;gap:4px"><span class="list-val" style="color:#a32d2d">${fmt(p.valor)}</span><button class="btn-del" onclick="removeDespesa(${p.id})">✕</button></div></div>`;
+  const el = document.getElementById('d-list');
+  if(!despesas.length){ el.innerHTML='<div class="empty">Nenhuma despesa adicionada.</div>'; return; }
+  el.innerHTML = despesas.map(p=>{
+    const periodo = p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
+    return`<div class="list-item">
+      <div style="flex:1;min-width:0">
+        <div class="list-name">${p.desc}<span class="badge badge-${p.date}">dia ${p.date}</span></div>
+        <div class="list-meta">${periodo||'Sem período'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <span class="list-val" style="color:#a32d2d">${fmt(p.valor)}</span>
+        <button class="btn-del" onclick="removeDespesa('${p.id}')">✕</button>
+      </div>
+    </div>`;
   }).join('');
 }
-function updateMeta(){
-  const meta=parseFloat(document.getElementById('r-meta').value)||0;
-  const taxaExtra=parseFloat(document.getElementById('r-taxa-extra').value)||0;
-  const total=getTotalR();
-  const dr=document.getElementById('r-delta-row');
-  if(!meta){dr.style.display='none';return;}
+
+window.updateMeta = function(){
+  const meta = parseFloat(document.getElementById('r-meta').value)||0;
+  const taxaExtra = parseFloat(document.getElementById('r-taxa-extra').value)||0;
+  const total = getTotalR();
+  const dr = document.getElementById('r-delta-row');
+  if(!meta){ dr.style.display='none'; return; }
   dr.style.display='grid';
-  const delta=meta-total,atingiu=delta<=0;
+  const delta=meta-total, atingiu=delta<=0;
   document.getElementById('r-val-meta').textContent=fmt(meta);
   document.getElementById('r-box-delta').className='delta-box '+(atingiu?'pos':'neg');
   document.getElementById('r-val-delta').textContent=fmt(Math.abs(delta));
   document.getElementById('r-sub-delta').textContent=atingiu?'acima da meta':'faltando';
   const bx=document.getElementById('r-box-extra');
-  if(!atingiu&&taxaExtra>0){bx.className='delta-box neg';document.getElementById('r-val-extra').textContent=(delta/taxaExtra).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'h';document.getElementById('r-sub-extra').textContent='a R$'+taxaExtra.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h';}
-  else if(atingiu){bx.className='delta-box pos';document.getElementById('r-val-extra').textContent='Meta atingida';document.getElementById('r-sub-extra').textContent='';}
-  else{bx.className='delta-box neutral';document.getElementById('r-val-extra').textContent='—';document.getElementById('r-sub-extra').textContent='informe taxa extra';}
-}
+  if(!atingiu&&taxaExtra>0){
+    bx.className='delta-box neg';
+    document.getElementById('r-val-extra').textContent=(delta/taxaExtra).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'h';
+    document.getElementById('r-sub-extra').textContent='a R$'+taxaExtra.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h';
+  } else if(atingiu){
+    bx.className='delta-box pos';
+    document.getElementById('r-val-extra').textContent='Meta atingida';
+    document.getElementById('r-sub-extra').textContent='';
+  } else {
+    bx.className='delta-box neutral';
+    document.getElementById('r-val-extra').textContent='—';
+    document.getElementById('r-sub-extra').textContent='informe taxa extra';
+  }
+};
+
 function renderHome(){
-  const totalR=getTotalR(),totalD=getTotalD(),saldo=totalR-totalD;
+  const totalR=getTotalR(), totalD=getTotalD(), saldo=totalR-totalD;
   const r16=receitas.filter(p=>p.date===16).reduce((a,p)=>a+p.sub,0);
   const r25=receitas.filter(p=>p.date===25).reduce((a,p)=>a+p.sub,0);
   const d16=despesas.filter(p=>p.date===16).reduce((a,p)=>a+p.valor,0);
@@ -295,22 +393,52 @@ function renderHome(){
   const mesesKeys=Object.keys(mesesData).slice(-6);
   const maxVal=Math.max(1,...mesesKeys.map(m=>Math.max(mesesData[m].r,mesesData[m].d)));
   const pctD=totalR>0?Math.min(100,(totalD/totalR)*100):0;
-  if(!totalR&&!totalD){document.getElementById('home-summary').innerHTML='<div class="empty" style="background:#fff;border-radius:12px;border:1px solid #e5e5e5">Adicione receitas e despesas para ver o resumo.</div>';return;}
+  if(!totalR&&!totalD){
+    document.getElementById('home-summary').innerHTML='<div class="empty" style="background:#fff;border-radius:12px;border:1px solid #e5e5e5">Adicione receitas e despesas para ver o resumo.</div>';
+    return;
+  }
   document.getElementById('home-summary').innerHTML=`
     <div class="summary-grid">
       <div class="summary-card"><div class="s-label">Receitas</div><div class="s-val blue">${fmt(totalR)}</div><div class="s-sub">${receitas.length} projeto${receitas.length!==1?'s':''}</div></div>
       <div class="summary-card"><div class="s-label">Despesas</div><div class="s-val red">${fmt(totalD)}</div><div class="s-sub">${despesas.length} item${despesas.length!==1?'s':''}</div></div>
       <div class="summary-card full"><div class="s-label">Saldo</div><div class="s-val ${saldo>=0?'green':'red'}">${fmt(saldo)}</div>
-        <div class="prog-wrap"><div class="prog-label"><span>Despesas vs receita</span><span>${pctD.toFixed(1)}%</span></div><div class="prog-bg"><div class="prog-fill" style="width:${pctD.toFixed(1)}%;background:${pctD>80?'#a32d2d':pctD>50?'#BA7517':'#2d7a2d'}"></div></div></div>
+        <div class="prog-wrap"><div class="prog-label"><span>Despesas vs receita</span><span>${pctD.toFixed(1)}%</span></div>
+        <div class="prog-bg"><div class="prog-fill" style="width:${pctD.toFixed(1)}%;background:${pctD>80?'#a32d2d':pctD>50?'#BA7517':'#2d7a2d'}"></div></div></div>
       </div>
     </div>
-    ${mesesKeys.length>0?`<div class="chart-wrap"><div class="chart-title">Receitas vs Despesas por mês</div><div class="chart-bars">${mesesKeys.map(m=>`<div class="chart-bar-wrap"><div class="chart-bar receita" style="height:${Math.round((mesesData[m].r/maxVal)*70)}px"></div><div class="chart-bar-label">${m.substring(0,3)}</div></div><div class="chart-bar-wrap"><div class="chart-bar despesa" style="height:${Math.round((mesesData[m].d/maxVal)*70)}px"></div><div class="chart-bar-label"></div></div>`).join('')}</div><div class="chart-legend"><div class="chart-legend-item"><div class="chart-legend-dot" style="background:#185FA5"></div>Receita</div><div class="chart-legend-item"><div class="chart-legend-dot" style="background:#1a1a1a"></div>Despesa</div></div></div>`:''}
+    ${mesesKeys.length>0?`<div class="chart-wrap"><div class="chart-title">Receitas vs Despesas por mês</div><div class="chart-bars">
+      ${mesesKeys.map(m=>`<div class="chart-bar-wrap"><div class="chart-bar receita" style="height:${Math.round((mesesData[m].r/maxVal)*70)}px"></div><div class="chart-bar-label">${m.substring(0,3)}</div></div><div class="chart-bar-wrap"><div class="chart-bar despesa" style="height:${Math.round((mesesData[m].d/maxVal)*70)}px"></div><div class="chart-bar-label"></div></div>`).join('')}
+      </div><div class="chart-legend"><div class="chart-legend-item"><div class="chart-legend-dot" style="background:#185FA5"></div>Receita</div><div class="chart-legend-item"><div class="chart-legend-dot" style="background:#1a1a1a"></div>Despesa</div></div></div>`:''}
     <div class="day-split">
-      <div class="day-card"><div class="day-header day-header-16"><span>Dia 16</span><span>${fmt(r16-d16)}</span></div><div class="day-body"><div class="day-row"><span class="day-row-label">Receita</span><span class="day-row-val">${fmt(r16)}</span></div><div class="day-row"><span class="day-row-label">Despesa</span><span class="day-row-val red">${fmt(d16)}</span></div><div class="day-row"><span class="day-row-label">Saldo</span><span class="day-row-val ${(r16-d16)>=0?'green':'red'}">${fmt(r16-d16)}</span></div></div></div>
-      <div class="day-card"><div class="day-header day-header-25"><span>Dia 25</span><span>${fmt(r25-d25)}</span></div><div class="day-body"><div class="day-row"><span class="day-row-label">Receita</span><span class="day-row-val">${fmt(r25)}</span></div><div class="day-row"><span class="day-row-label">Despesa</span><span class="day-row-val red">${fmt(d25)}</span></div><div class="day-row"><span class="day-row-label">Saldo</span><span class="day-row-val ${(r25-d25)>=0?'green':'red'}">${fmt(r25-d25)}</span></div></div></div>
+      <div class="day-card"><div class="day-header day-header-16"><span>Dia 16</span><span>${fmt(r16-d16)}</span></div><div class="day-body">
+        <div class="day-row"><span class="day-row-label">Receita</span><span class="day-row-val">${fmt(r16)}</span></div>
+        <div class="day-row"><span class="day-row-label">Despesa</span><span class="day-row-val red">${fmt(d16)}</span></div>
+        <div class="day-row"><span class="day-row-label">Saldo</span><span class="day-row-val ${(r16-d16)>=0?'green':'red'}">${fmt(r16-d16)}</span></div>
+      </div></div>
+      <div class="day-card"><div class="day-header day-header-25"><span>Dia 25</span><span>${fmt(r25-d25)}</span></div><div class="day-body">
+        <div class="day-row"><span class="day-row-label">Receita</span><span class="day-row-val">${fmt(r25)}</span></div>
+        <div class="day-row"><span class="day-row-label">Despesa</span><span class="day-row-val red">${fmt(d25)}</span></div>
+        <div class="day-row"><span class="day-row-label">Saldo</span><span class="day-row-val ${(r25-d25)>=0?'green':'red'}">${fmt(r25-d25)}</span></div>
+      </div></div>
     </div>`;
 }
-renderHome();
+
+// Listeners em tempo real
+onSnapshot(query(collection(db,'receitas'),orderBy('criadoEm','asc')), snap=>{
+  receitas = snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderReceitas();
+  renderHome();
+  setSynced(true);
+}, ()=>setSynced(false));
+
+onSnapshot(query(collection(db,'despesas'),orderBy('criadoEm','asc')), snap=>{
+  despesas = snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderDespesas();
+  renderHome();
+  setSynced(true);
+}, ()=>setSynced(false));
+
 </script>
+
 </body>
 </html>
