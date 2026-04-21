@@ -435,9 +435,8 @@ function renderHome(){
       </div>
     </div>
     ${(()=>{
-      const saldoPos = Math.max(0, saldo);
-      const total3 = totalR + totalD + saldoPos;
-      if(total3 === 0) return '';
+      const total2 = totalR + totalD;
+      if(total2 === 0) return '';
       const cx=100,cy=100,r=80;
       function slice(start,val,total,color){
         if(val<=0) return '';
@@ -449,23 +448,23 @@ function renderHome(){
         const lg=pct>0.5?1:0;
         return `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${lg},1 ${x2},${y2} Z" fill="${color}"/>`;
       }
-      const pR=totalR/total3, pD=totalD/total3;
-      const svgSlices = slice(0,totalR,total3,'#185FA5') + slice(pR,totalD,total3,'#a32d2d') + slice(pR+pD,saldoPos,total3,'#2d7a2d');
+      const pR=totalR/total2;
+      const svgSlices = slice(0,totalR,total2,'#185FA5') + slice(pR,totalD,total2,'#a32d2d');
       return `<div class="chart-wrap">
-        <div class="chart-title">Distribuição financeira</div>
+        <div class="chart-title">Receitas vs Despesas</div>
         <div style="display:flex;align-items:center;gap:16px">
           <svg viewBox="0 0 200 200" style="width:130px;height:130px;flex-shrink:0">
             ${svgSlices}
             <circle cx="${cx}" cy="${cy}" r="40" fill="#fff"/>
           </svg>
-          <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+          <div style="flex:1;display:flex;flex-direction:column;gap:12px">
             <div>
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
                 <div style="width:10px;height:10px;border-radius:2px;background:#185FA5;flex-shrink:0"></div>
                 <span style="font-size:11px;color:#888">Receitas</span>
               </div>
               <div style="font-size:14px;font-weight:500">${fmt(totalR)}</div>
-              <div style="font-size:11px;color:#888">${(totalR/total3*100).toFixed(1)}%</div>
+              <div style="font-size:11px;color:#888">${(totalR/total2*100).toFixed(1)}%</div>
             </div>
             <div>
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
@@ -473,15 +472,7 @@ function renderHome(){
                 <span style="font-size:11px;color:#888">Despesas</span>
               </div>
               <div style="font-size:14px;font-weight:500;color:#a32d2d">${fmt(totalD)}</div>
-              <div style="font-size:11px;color:#888">${(totalD/total3*100).toFixed(1)}%</div>
-            </div>
-            <div>
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-                <div style="width:10px;height:10px;border-radius:2px;background:#2d7a2d;flex-shrink:0"></div>
-                <span style="font-size:11px;color:#888">Saldo</span>
-              </div>
-              <div style="font-size:14px;font-weight:500;color:#2d7a2d">${fmt(saldoPos)}</div>
-              <div style="font-size:11px;color:#888">${(saldoPos/total3*100).toFixed(1)}%</div>
+              <div style="font-size:11px;color:#888">${(totalD/total2*100).toFixed(1)}%</div>
             </div>
           </div>
         </div>
