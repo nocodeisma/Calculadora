@@ -16,11 +16,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .home{padding:1.5rem 1rem 2rem;}
 .home-title{font-size:24px;font-weight:500;margin-bottom:4px;}
 .home-sub{font-size:13px;color:#666;margin-bottom:1.5rem;}
-.home-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem;}
+.home-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
 .home-btn{border-radius:14px;padding:1.25rem;border:none;cursor:pointer;text-align:left;transition:transform 0.12s;width:100%;}
 .home-btn:active{transform:scale(0.97);}
 .home-btn-receita{background:#185FA5;color:#fff;}
 .home-btn-despesa{background:#1a1a1a;color:#fff;}
+.home-btn-historico{background:#5b3fa5;color:#fff;grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:1rem 1.25rem;}
+.home-btn-historico .home-btn-icon{font-size:20px;margin:0;}
+.home-btn-historico .home-btn-title{font-size:15px;}
 .home-btn-icon{font-size:22px;margin-bottom:8px;}
 .home-btn-label{font-size:11px;opacity:0.7;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:2px;}
 .home-btn-title{font-size:16px;font-weight:500;}
@@ -39,15 +42,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .prog-fill{height:100%;border-radius:99px;transition:width 0.4s;}
 .chart-wrap{background:#fff;border-radius:12px;padding:14px;border:1px solid #e5e5e5;margin-bottom:12px;}
 .chart-title{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px;}
-.chart-bars{display:flex;align-items:flex-end;gap:4px;height:80px;}
-.chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
-.chart-bar{width:100%;border-radius:4px 4px 0 0;min-height:2px;}
-.chart-bar.receita{background:#185FA5;}
-.chart-bar.despesa{background:#1a1a1a;}
-.chart-bar-label{font-size:9px;color:#999;text-align:center;}
-.chart-legend{display:flex;gap:12px;margin-top:10px;}
-.chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#666;}
-.chart-legend-dot{width:8px;height:8px;border-radius:2px;}
 .day-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
 .day-card{border-radius:12px;overflow:hidden;border:1px solid #e5e5e5;}
 .day-header{padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}
@@ -82,6 +76,9 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
 .btn-add.despesa{background:#1a1a1a;}
 .btn-add:active{opacity:0.85;}
 .btn-add:disabled{opacity:0.5;cursor:not-allowed;}
+.btn-fechar-mes{width:100%;padding:11px;font-size:14px;font-weight:500;border:2px solid #5b3fa5;border-radius:8px;color:#5b3fa5;background:#fff;cursor:pointer;font-family:inherit;margin-top:8px;transition:all 0.15s;}
+.btn-fechar-mes:hover{background:#5b3fa5;color:#fff;}
+.btn-fechar-mes:disabled{opacity:0.5;cursor:not-allowed;}
 .list-item{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:0.9rem 1.1rem;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .list-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .list-meta{font-size:11px;color:#888;margin-top:2px;}
@@ -104,12 +101,36 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
 .delta-box.neg .delta-label,.delta-box.neg .delta-val,.delta-box.neg .delta-sub{color:#a32d2d;}
 .delta-val{font-size:15px;font-weight:500;}
 .delta-sub{font-size:10px;margin-top:2px;}
-.loading{text-align:center;padding:2rem;font-size:13px;color:#888;}
-.hidden{display:none!important;}
 .d-section-header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:10px;margin-bottom:6px;font-size:13px;font-weight:500;color:#fff;}
 .d-header-16{background:#185FA5;}
 .d-header-25{background:#BA7517;}
 .d-total-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#1a1a1a;border-radius:10px;margin-top:4px;font-size:14px;font-weight:500;color:#fff;}
+/* HISTÓRICO */
+.hist-mes-card{background:#fff;border-radius:12px;border:1px solid #e5e5e5;margin-bottom:12px;overflow:hidden;}
+.hist-mes-header{background:#5b3fa5;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+.hist-mes-header span{color:#fff;font-size:14px;font-weight:500;}
+.hist-mes-header .hist-saldo{font-size:12px;opacity:0.85;}
+.hist-mes-body{padding:12px 16px;}
+.hist-section-label{font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;margin-top:12px;}
+.hist-section-label:first-child{margin-top:0;}
+.hist-item{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #f5f5f5;}
+.hist-item:last-child{border-bottom:none;}
+.hist-item-name{color:#1a1a1a;}
+.hist-item-val{font-weight:500;}
+.hist-total-row{display:flex;justify-content:space-between;padding:10px 0 0;margin-top:8px;border-top:1px solid #e5e5e5;font-size:14px;font-weight:500;}
+.hist-del-btn{background:none;border:1px solid #e5e5e5;border-radius:6px;padding:4px 10px;font-size:11px;color:#888;cursor:pointer;margin-top:10px;font-family:inherit;}
+.hist-del-btn:hover{border-color:#e24b4a;color:#e24b4a;}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:flex-end;}
+.modal-box{background:#fff;border-radius:16px 16px 0 0;padding:1.5rem 1rem;width:100%;max-height:80vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:500;margin-bottom:6px;}
+.modal-sub{font-size:13px;color:#666;margin-bottom:1.25rem;}
+.modal-actions{display:flex;gap:10px;margin-top:1rem;}
+.modal-btn{flex:1;padding:11px;font-size:14px;font-weight:500;border-radius:8px;cursor:pointer;font-family:inherit;}
+.modal-btn-cancel{background:#f0f0ee;border:none;color:#666;}
+.modal-btn-confirm{background:#5b3fa5;border:none;color:#fff;}
+.loading{text-align:center;padding:2rem;font-size:13px;color:#888;}
+.hidden{display:none!important;}
 </style>
 </head>
 <body>
@@ -117,7 +138,7 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
 <div class="nav">
   <button class="btn-nav-back hidden" id="btn-nav-back" onclick="goTo('home')">←</button>
   <span class="nav-title" id="nav-title">💰 Finanças</span>
-  <div class="sync-dot" id="sync-dot" title="Sincronizando..."></div>
+  <div class="sync-dot" id="sync-dot"></div>
 </div>
 
 <!-- HOME -->
@@ -134,6 +155,13 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
       <div class="home-btn-icon">📉</div>
       <span class="home-btn-label">Saídas</span>
       <div class="home-btn-title">Despesas</div>
+    </button>
+    <button class="home-btn home-btn-historico" onclick="goTo('historico')">
+      <div class="home-btn-icon">📋</div>
+      <div>
+        <span class="home-btn-label">Meses fechados</span>
+        <div class="home-btn-title">Histórico</div>
+      </div>
     </button>
   </div>
   <div id="home-summary"><div class="loading">Conectando...</div></div>
@@ -180,6 +208,7 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
       <div class="delta-box neutral" id="r-box-delta"><div class="delta-label">Delta</div><div class="delta-val" id="r-val-delta">—</div><div class="delta-sub" id="r-sub-delta">—</div></div>
       <div class="delta-box neutral" id="r-box-extra"><div class="delta-label">Horas extras</div><div class="delta-val" id="r-val-extra">—</div><div class="delta-sub" id="r-sub-extra">—</div></div>
     </div>
+    <button class="btn-fechar-mes" id="r-fechar-btn" onclick="abrirModal('receita')">📋 Fechar mês — Receitas</button>
   </div>
 </div>
 
@@ -208,6 +237,37 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
     <button class="btn-add despesa" id="d-btn-add" onclick="addDespesa()">+ Adicionar despesa</button>
   </div>
   <div id="d-list"><div class="loading">Carregando...</div></div>
+  <div id="d-fechar-wrap" class="hidden" style="margin-top:8px">
+    <button class="btn-fechar-mes" onclick="abrirModal('despesa')">📋 Fechar mês — Despesas</button>
+  </div>
+</div>
+
+<!-- HISTÓRICO -->
+<div id="page-historico" class="section hidden">
+  <div style="height:1rem"></div>
+  <div id="hist-list"><div class="loading">Carregando histórico...</div></div>
+</div>
+
+<!-- MODAL FECHAR MÊS -->
+<div class="modal-overlay hidden" id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Fechar mês</div>
+    <div class="modal-sub" id="modal-sub">Selecione o mês de referência para fechar.</div>
+    <div class="grid2">
+      <div><label>Mês</label>
+        <select id="modal-mes"><option value="">-- Mês --</option>
+          <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
+          <option>Maio</option><option>Junho</option><option>Julho</option><option>Agosto</option>
+          <option>Setembro</option><option>Outubro</option><option>Novembro</option><option>Dezembro</option>
+        </select>
+      </div>
+      <div><label>Ano</label><input type="number" id="modal-ano" placeholder="2026" min="2020" max="2099" step="1" value="2026"/></div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="modal-btn modal-btn-confirm" id="modal-confirm-btn" onclick="confirmarFechamento()">Confirmar</button>
+    </div>
+  </div>
 </div>
 
 <script type="module">
@@ -226,38 +286,34 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let receitas = [], despesas = [], rDate = 16, dDate = 16;
+let receitas=[], despesas=[], historico=[], rDate=16, dDate=16, modalTipo='';
 
 const dot = document.getElementById('sync-dot');
-function setSynced(ok){ dot.className = 'sync-dot ' + (ok ? 'ok' : 'err'); }
-
+function setSynced(ok){ dot.className='sync-dot '+(ok?'ok':'err'); }
 function fmt(v){ return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
 function calcSub(t,h,d){ return (parseFloat(t)||0)*(parseFloat(h)||0)*(parseFloat(d)||0); }
 function getTotalR(){ return receitas.reduce((a,p)=>a+p.sub,0); }
 function getTotalD(){ return despesas.reduce((a,p)=>a+p.valor,0); }
 
 window.goTo = function(page){
-  ['home','receita','despesa'].forEach(p=>document.getElementById('page-'+p).classList.add('hidden'));
+  ['home','receita','despesa','historico'].forEach(p=>document.getElementById('page-'+p).classList.add('hidden'));
   document.getElementById('page-'+page).classList.remove('hidden');
   const back = document.getElementById('btn-nav-back');
-  if(page==='home'){
-    back.classList.add('hidden');
-    document.getElementById('nav-title').textContent='💰 Finanças';
-    renderHome();
-  } else {
-    back.classList.remove('hidden');
-    document.getElementById('nav-title').textContent = page==='receita'?'📈 Receitas':'📉 Despesas';
-  }
+  const titles = {home:'💰 Finanças', receita:'📈 Receitas', despesa:'📉 Despesas', historico:'📋 Histórico'};
+  document.getElementById('nav-title').textContent = titles[page];
+  if(page==='home'){ back.classList.add('hidden'); renderHome(); }
+  else { back.classList.remove('hidden'); }
+  if(page==='historico') renderHistorico();
 };
 
-window.selDate = function(prefix, d){
+window.selDate = function(prefix,d){
   if(prefix==='r') rDate=d; else dDate=d;
   document.getElementById(prefix+'-btn16').className='date-btn date-btn-16'+(d===16?' sel':'');
   document.getElementById(prefix+'-btn25').className='date-btn date-btn-25'+(d===25?' sel':'');
 };
 
 window.recalcPreview = function(){
-  document.getElementById('r-preview').textContent = fmt(calcSub(
+  document.getElementById('r-preview').textContent=fmt(calcSub(
     document.getElementById('r-taxa').value,
     document.getElementById('r-horas').value,
     document.getElementById('r-dias').value
@@ -265,62 +321,92 @@ window.recalcPreview = function(){
 };
 
 window.addReceita = async function(){
-  const desc = document.getElementById('r-desc').value.trim();
-  const taxa = parseFloat(document.getElementById('r-taxa').value)||0;
-  const horas = parseFloat(document.getElementById('r-horas').value)||0;
-  const dias = parseInt(document.getElementById('r-dias').value)||0;
-  const mes = document.getElementById('r-mes').value;
-  const ano = document.getElementById('r-ano').value;
-  if(!desc){ document.getElementById('r-desc').focus(); return; }
-  if(!taxa||!horas||!dias) return;
-  const btn = document.getElementById('r-btn-add');
-  btn.disabled = true;
-  try {
+  const desc=document.getElementById('r-desc').value.trim();
+  const taxa=parseFloat(document.getElementById('r-taxa').value)||0;
+  const horas=parseFloat(document.getElementById('r-horas').value)||0;
+  const dias=parseInt(document.getElementById('r-dias').value)||0;
+  const mes=document.getElementById('r-mes').value;
+  const ano=document.getElementById('r-ano').value;
+  if(!desc){document.getElementById('r-desc').focus();return;}
+  if(!taxa||!horas||!dias)return;
+  const btn=document.getElementById('r-btn-add'); btn.disabled=true;
+  try{
     await addDoc(collection(db,'receitas'),{desc,taxa,horas,dias,sub:calcSub(taxa,horas,dias),date:rDate,mes,ano,criadoEm:serverTimestamp()});
     ['r-desc','r-taxa','r-horas','r-dias'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('r-preview').textContent='R$ 0,00';
     document.getElementById('r-desc').focus();
     setSynced(true);
-  } catch(e){ setSynced(false); alert('Erro ao salvar: '+e.message); }
-  btn.disabled = false;
+  }catch(e){setSynced(false);alert('Erro: '+e.message);}
+  btn.disabled=false;
 };
 
 window.addDespesa = async function(){
-  const desc = document.getElementById('d-desc').value.trim();
-  const valor = parseFloat(document.getElementById('d-valor').value)||0;
-  const mes = document.getElementById('d-mes').value;
-  const ano = document.getElementById('d-ano').value;
-  if(!desc){ document.getElementById('d-desc').focus(); return; }
-  if(!valor) return;
-  const btn = document.getElementById('d-btn-add');
-  btn.disabled = true;
-  try {
+  const desc=document.getElementById('d-desc').value.trim();
+  const valor=parseFloat(document.getElementById('d-valor').value)||0;
+  const mes=document.getElementById('d-mes').value;
+  const ano=document.getElementById('d-ano').value;
+  if(!desc){document.getElementById('d-desc').focus();return;}
+  if(!valor)return;
+  const btn=document.getElementById('d-btn-add'); btn.disabled=true;
+  try{
     await addDoc(collection(db,'despesas'),{desc,valor,date:dDate,mes,ano,criadoEm:serverTimestamp()});
     ['d-desc','d-valor'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('d-desc').focus();
     setSynced(true);
-  } catch(e){ setSynced(false); alert('Erro ao salvar: '+e.message); }
-  btn.disabled = false;
+  }catch(e){setSynced(false);alert('Erro: '+e.message);}
+  btn.disabled=false;
 };
 
 window.removeReceita = async function(id){
-  try { await deleteDoc(doc(db,'receitas',id)); setSynced(true); }
-  catch(e){ setSynced(false); }
+  try{await deleteDoc(doc(db,'receitas',id));setSynced(true);}catch(e){setSynced(false);}
+};
+window.removeDespesa = async function(id){
+  try{await deleteDoc(doc(db,'despesas',id));setSynced(true);}catch(e){setSynced(false);}
+};
+window.removeHistorico = async function(id){
+  if(!confirm('Remover este mês do histórico?'))return;
+  try{await deleteDoc(doc(db,'historico',id));setSynced(true);}catch(e){setSynced(false);}
 };
 
-window.removeDespesa = async function(id){
-  try { await deleteDoc(doc(db,'despesas',id)); setSynced(true); }
-  catch(e){ setSynced(false); }
+// MODAL
+window.abrirModal = function(tipo){
+  modalTipo = tipo;
+  document.getElementById('modal-title').textContent = tipo==='receita'?'Fechar mês — Receitas':'Fechar mês — Despesas';
+  document.getElementById('modal-sub').textContent = 'Todos os lançamentos de '+( tipo==='receita'?'receitas':'despesas')+' serão copiados para o histórico do mês selecionado.';
+  document.getElementById('modal-overlay').classList.remove('hidden');
+};
+window.fecharModal = function(){
+  document.getElementById('modal-overlay').classList.add('hidden');
+};
+window.confirmarFechamento = async function(){
+  const mes = document.getElementById('modal-mes').value;
+  const ano = document.getElementById('modal-ano').value;
+  if(!mes||!ano){alert('Selecione mês e ano.');return;}
+  const btn = document.getElementById('modal-confirm-btn'); btn.disabled=true;
+  const itens = modalTipo==='receita'
+    ? receitas.map(p=>({desc:p.desc,valor:p.sub,taxa:p.taxa,horas:p.horas,dias:p.dias,date:p.date}))
+    : despesas.map(p=>({desc:p.desc,valor:p.valor,date:p.date}));
+  const total = itens.reduce((a,p)=>a+p.valor,0);
+  try{
+    await addDoc(collection(db,'historico'),{
+      tipo:modalTipo, mes, ano, itens, total,
+      criadoEm:serverTimestamp()
+    });
+    setSynced(true);
+    fecharModal();
+    alert('Mês fechado com sucesso! Veja em Histórico.');
+  }catch(e){setSynced(false);alert('Erro: '+e.message);}
+  btn.disabled=false;
 };
 
 function renderReceitas(){
-  const el = document.getElementById('r-list');
-  const meta = document.getElementById('r-meta-section');
-  if(!receitas.length){ el.innerHTML='<div class="empty">Nenhuma receita adicionada.</div>'; meta.classList.add('hidden'); return; }
+  const el=document.getElementById('r-list');
+  const meta=document.getElementById('r-meta-section');
+  if(!receitas.length){el.innerHTML='<div class="empty">Nenhuma receita adicionada.</div>';meta.classList.add('hidden');return;}
   meta.classList.remove('hidden');
-  el.innerHTML = receitas.map(p=>{
-    const th = (p.horas*p.dias).toLocaleString('pt-BR',{maximumFractionDigits:1});
-    const periodo = p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
+  el.innerHTML=receitas.map(p=>{
+    const th=(p.horas*p.dias).toLocaleString('pt-BR',{maximumFractionDigits:1});
+    const periodo=p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
     return`<div class="list-item">
       <div style="flex:1;min-width:0">
         <div class="list-name">${p.desc}<span class="badge badge-${p.date}">dia ${p.date}</span></div>
@@ -336,17 +422,17 @@ function renderReceitas(){
 }
 
 function renderDespesas(){
-  const el = document.getElementById('d-list');
-  if(!despesas.length){ el.innerHTML='<div class="empty">Nenhuma despesa adicionada.</div>'; return; }
-
-  const d16 = despesas.filter(p=>p.date===16);
-  const d25 = despesas.filter(p=>p.date===25);
-  const t16 = d16.reduce((a,p)=>a+p.valor,0);
-  const t25 = d25.reduce((a,p)=>a+p.valor,0);
-  const total = t16+t25;
-
+  const el=document.getElementById('d-list');
+  const wrap=document.getElementById('d-fechar-wrap');
+  if(!despesas.length){el.innerHTML='<div class="empty">Nenhuma despesa adicionada.</div>';wrap.classList.add('hidden');return;}
+  wrap.classList.remove('hidden');
+  const d16=despesas.filter(p=>p.date===16);
+  const d25=despesas.filter(p=>p.date===25);
+  const t16=d16.reduce((a,p)=>a+p.valor,0);
+  const t25=d25.reduce((a,p)=>a+p.valor,0);
+  const total=t16+t25;
   function itemHtml(p){
-    const periodo = p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
+    const periodo=p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
     return`<div class="list-item">
       <div style="flex:1;min-width:0">
         <div class="list-name">${p.desc}</div>
@@ -358,69 +444,101 @@ function renderDespesas(){
       </div>
     </div>`;
   }
+  el.innerHTML=`
+    <div class="d-section-header d-header-16"><span>Dia 16</span><span>${fmt(t16)}</span></div>
+    ${d16.length?d16.map(itemHtml).join(''):'<div class="empty" style="background:#fff;border-radius:10px;margin-bottom:6px">Nenhuma despesa no dia 16.</div>'}
+    <div class="d-section-header d-header-25" style="margin-top:8px"><span>Dia 25</span><span>${fmt(t25)}</span></div>
+    ${d25.length?d25.map(itemHtml).join(''):'<div class="empty" style="background:#fff;border-radius:10px;margin-bottom:6px">Nenhuma despesa no dia 25.</div>'}
+    <div class="d-total-bar"><span>Total de despesas</span><span>${fmt(total)}</span></div>`;
+}
 
-  el.innerHTML = `
-    <div class="d-section-header d-header-16">
-      <span>Dia 16</span><span>${fmt(t16)}</span>
-    </div>
-    ${d16.length ? d16.map(itemHtml).join('') : '<div class="empty" style="background:#fff;border-radius:10px;margin-bottom:6px">Nenhuma despesa no dia 16.</div>'}
-
-    <div class="d-section-header d-header-25">
-      <span>Dia 25</span><span>${fmt(t25)}</span>
-    </div>
-    ${d25.length ? d25.map(itemHtml).join('') : '<div class="empty" style="background:#fff;border-radius:10px;margin-bottom:6px">Nenhuma despesa no dia 25.</div>'}
-
-    <div class="d-total-bar">
-      <span>Total de despesas</span>
-      <span>${fmt(total)}</span>
-    </div>
-  `;
+function renderHistorico(){
+  const el=document.getElementById('hist-list');
+  if(!historico.length){el.innerHTML='<div class="empty" style="background:#fff;border-radius:12px;border:1px solid #e5e5e5;padding:2rem">Nenhum mês fechado ainda.</div>';return;}
+  const sorted=[...historico].sort((a,b)=>{
+    const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const ai=parseInt(a.ano)*12+meses.indexOf(a.mes);
+    const bi=parseInt(b.ano)*12+meses.indexOf(b.mes);
+    return bi-ai;
+  });
+  el.innerHTML=sorted.map(h=>{
+    const cor=h.tipo==='receita'?'#185FA5':'#a32d2d';
+    const emoji=h.tipo==='receita'?'📈':'📉';
+    const label=h.tipo==='receita'?'Receitas':'Despesas';
+    return`<div class="hist-mes-card">
+      <div class="hist-mes-header" style="background:${h.tipo==='receita'?'#185FA5':'#1a1a1a'}">
+        <span>${emoji} ${label} — ${h.mes} ${h.ano}</span>
+        <span class="hist-saldo">${fmt(h.total)}</span>
+      </div>
+      <div class="hist-mes-body">
+        <div class="hist-section-label">${label} realizadas</div>
+        ${h.itens.map(i=>`<div class="hist-item">
+          <span class="hist-item-name">${i.desc}<span class="badge badge-${i.date}" style="margin-left:5px">dia ${i.date}</span></span>
+          <span class="hist-item-val" style="color:${cor}">${fmt(i.valor)}</span>
+        </div>`).join('')}
+        <div class="hist-total-row">
+          <span>Total</span>
+          <span style="color:${cor}">${fmt(h.total)}</span>
+        </div>
+        <button class="hist-del-btn" onclick="removeHistorico('${h.id}')">Remover registro</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 window.updateMeta = function(){
-  const meta = parseFloat(document.getElementById('r-meta').value)||0;
-  const taxaExtra = parseFloat(document.getElementById('r-taxa-extra').value)||0;
-  const total = getTotalR();
-  const dr = document.getElementById('r-delta-row');
-  if(!meta){ dr.style.display='none'; return; }
+  const meta=parseFloat(document.getElementById('r-meta').value)||0;
+  const taxaExtra=parseFloat(document.getElementById('r-taxa-extra').value)||0;
+  const total=getTotalR();
+  const dr=document.getElementById('r-delta-row');
+  if(!meta){dr.style.display='none';return;}
   dr.style.display='grid';
-  const delta=meta-total, atingiu=delta<=0;
+  const delta=meta-total,atingiu=delta<=0;
   document.getElementById('r-val-meta').textContent=fmt(meta);
   document.getElementById('r-box-delta').className='delta-box '+(atingiu?'pos':'neg');
   document.getElementById('r-val-delta').textContent=fmt(Math.abs(delta));
   document.getElementById('r-sub-delta').textContent=atingiu?'acima da meta':'faltando';
   const bx=document.getElementById('r-box-extra');
-  if(!atingiu&&taxaExtra>0){
-    bx.className='delta-box neg';
-    document.getElementById('r-val-extra').textContent=(delta/taxaExtra).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'h';
-    document.getElementById('r-sub-extra').textContent='a R$'+taxaExtra.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h';
-  } else if(atingiu){
-    bx.className='delta-box pos';
-    document.getElementById('r-val-extra').textContent='Meta atingida';
-    document.getElementById('r-sub-extra').textContent='';
-  } else {
-    bx.className='delta-box neutral';
-    document.getElementById('r-val-extra').textContent='—';
-    document.getElementById('r-sub-extra').textContent='informe taxa extra';
-  }
+  if(!atingiu&&taxaExtra>0){bx.className='delta-box neg';document.getElementById('r-val-extra').textContent=(delta/taxaExtra).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'h';document.getElementById('r-sub-extra').textContent='a R$'+taxaExtra.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h';}
+  else if(atingiu){bx.className='delta-box pos';document.getElementById('r-val-extra').textContent='Meta atingida';document.getElementById('r-sub-extra').textContent='';}
+  else{bx.className='delta-box neutral';document.getElementById('r-val-extra').textContent='—';document.getElementById('r-sub-extra').textContent='informe taxa extra';}
 };
 
 function renderHome(){
-  const totalR=getTotalR(), totalD=getTotalD(), saldo=totalR-totalD;
+  const totalR=getTotalR(),totalD=getTotalD(),saldo=totalR-totalD;
   const r16=receitas.filter(p=>p.date===16).reduce((a,p)=>a+p.sub,0);
   const r25=receitas.filter(p=>p.date===25).reduce((a,p)=>a+p.sub,0);
   const d16=despesas.filter(p=>p.date===16).reduce((a,p)=>a+p.valor,0);
   const d25=despesas.filter(p=>p.date===25).reduce((a,p)=>a+p.valor,0);
-  const mesesData={};
-  receitas.forEach(p=>{if(p.mes){if(!mesesData[p.mes])mesesData[p.mes]={r:0,d:0};mesesData[p.mes].r+=p.sub;}});
-  despesas.forEach(p=>{if(p.mes){if(!mesesData[p.mes])mesesData[p.mes]={r:0,d:0};mesesData[p.mes].d+=p.valor;}});
-  const mesesKeys=Object.keys(mesesData).slice(-6);
-  const maxVal=Math.max(1,...mesesKeys.map(m=>Math.max(mesesData[m].r,mesesData[m].d)));
   const pctD=totalR>0?Math.min(100,(totalD/totalR)*100):0;
   if(!totalR&&!totalD){
     document.getElementById('home-summary').innerHTML='<div class="empty" style="background:#fff;border-radius:12px;border:1px solid #e5e5e5">Adicione receitas e despesas para ver o resumo.</div>';
     return;
   }
+  const pizzaHtml=(()=>{
+    const total2=totalR+totalD;
+    if(total2===0)return'';
+    const cx=100,cy=100,r=80;
+    function slice(start,val,total,color){
+      if(val<=0)return'';
+      const pct=val/total;
+      if(pct>=1)return`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}"/>`;
+      const a=start*2*Math.PI,b=(start+pct)*2*Math.PI;
+      const x1=cx+r*Math.sin(a),y1=cy-r*Math.cos(a),x2=cx+r*Math.sin(b),y2=cy-r*Math.cos(b);
+      return`<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${pct>0.5?1:0},1 ${x2},${y2} Z" fill="${color}"/>`;
+    }
+    return`<div class="chart-wrap"><div class="chart-title">Receitas vs Despesas</div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <svg viewBox="0 0 200 200" style="width:130px;height:130px;flex-shrink:0">
+          ${slice(0,totalR,total2,'#185FA5')}${slice(totalR/total2,totalD,total2,'#a32d2d')}
+          <circle cx="${cx}" cy="${cy}" r="40" fill="#fff"/>
+        </svg>
+        <div style="flex:1;display:flex;flex-direction:column;gap:12px">
+          <div><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><div style="width:10px;height:10px;border-radius:2px;background:#185FA5;flex-shrink:0"></div><span style="font-size:11px;color:#888">Receitas</span></div><div style="font-size:14px;font-weight:500">${fmt(totalR)}</div><div style="font-size:11px;color:#888">${(totalR/total2*100).toFixed(1)}%</div></div>
+          <div><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><div style="width:10px;height:10px;border-radius:2px;background:#a32d2d;flex-shrink:0"></div><span style="font-size:11px;color:#888">Despesas</span></div><div style="font-size:14px;font-weight:500;color:#a32d2d">${fmt(totalD)}</div><div style="font-size:11px;color:#888">${(totalD/total2*100).toFixed(1)}%</div></div>
+        </div>
+      </div></div>`;
+  })();
   document.getElementById('home-summary').innerHTML=`
     <div class="summary-grid">
       <div class="summary-card"><div class="s-label">Receitas</div><div class="s-val blue">${fmt(totalR)}</div><div class="s-sub">${receitas.length} projeto${receitas.length!==1?'s':''}</div></div>
@@ -430,50 +548,7 @@ function renderHome(){
         <div class="prog-bg"><div class="prog-fill" style="width:${pctD.toFixed(1)}%;background:${pctD>80?'#a32d2d':pctD>50?'#BA7517':'#2d7a2d'}"></div></div></div>
       </div>
     </div>
-    ${(()=>{
-      const total2 = totalR + totalD;
-      if(total2 === 0) return '';
-      const cx=100,cy=100,r=80;
-      function slice(start,val,total,color){
-        if(val<=0) return '';
-        const pct=val/total;
-        if(pct>=1) return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}"/>`;
-        const a=start*2*Math.PI, b=(start+pct)*2*Math.PI;
-        const x1=cx+r*Math.sin(a), y1=cy-r*Math.cos(a);
-        const x2=cx+r*Math.sin(b), y2=cy-r*Math.cos(b);
-        const lg=pct>0.5?1:0;
-        return `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${lg},1 ${x2},${y2} Z" fill="${color}"/>`;
-      }
-      const pR=totalR/total2;
-      const svgSlices = slice(0,totalR,total2,'#185FA5') + slice(pR,totalD,total2,'#a32d2d');
-      return `<div class="chart-wrap">
-        <div class="chart-title">Receitas vs Despesas</div>
-        <div style="display:flex;align-items:center;gap:16px">
-          <svg viewBox="0 0 200 200" style="width:130px;height:130px;flex-shrink:0">
-            ${svgSlices}
-            <circle cx="${cx}" cy="${cy}" r="40" fill="#fff"/>
-          </svg>
-          <div style="flex:1;display:flex;flex-direction:column;gap:12px">
-            <div>
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-                <div style="width:10px;height:10px;border-radius:2px;background:#185FA5;flex-shrink:0"></div>
-                <span style="font-size:11px;color:#888">Receitas</span>
-              </div>
-              <div style="font-size:14px;font-weight:500">${fmt(totalR)}</div>
-              <div style="font-size:11px;color:#888">${(totalR/total2*100).toFixed(1)}%</div>
-            </div>
-            <div>
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-                <div style="width:10px;height:10px;border-radius:2px;background:#a32d2d;flex-shrink:0"></div>
-                <span style="font-size:11px;color:#888">Despesas</span>
-              </div>
-              <div style="font-size:14px;font-weight:500;color:#a32d2d">${fmt(totalD)}</div>
-              <div style="font-size:11px;color:#888">${(totalD/total2*100).toFixed(1)}%</div>
-            </div>
-          </div>
-        </div>
-      </div>`;
-    })()}
+    ${pizzaHtml}
     <div class="day-split">
       <div class="day-card"><div class="day-header day-header-16"><span>Dia 16</span><span>${fmt(r16-d16)}</span></div><div class="day-body">
         <div class="day-row"><span class="day-row-label">Receita</span><span class="day-row-val">${fmt(r16)}</span></div>
@@ -488,20 +563,21 @@ function renderHome(){
     </div>`;
 }
 
-// Listeners em tempo real
-onSnapshot(query(collection(db,'receitas'),orderBy('criadoEm','asc')), snap=>{
-  receitas = snap.docs.map(d=>({id:d.id,...d.data()}));
-  renderReceitas();
-  renderHome();
-  setSynced(true);
-}, ()=>setSynced(false));
+// Listeners tempo real
+onSnapshot(query(collection(db,'receitas'),orderBy('criadoEm','asc')),snap=>{
+  receitas=snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderReceitas(); renderHome(); setSynced(true);
+},()=>setSynced(false));
 
-onSnapshot(query(collection(db,'despesas'),orderBy('criadoEm','asc')), snap=>{
-  despesas = snap.docs.map(d=>({id:d.id,...d.data()}));
-  renderDespesas();
-  renderHome();
+onSnapshot(query(collection(db,'despesas'),orderBy('criadoEm','asc')),snap=>{
+  despesas=snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderDespesas(); renderHome(); setSynced(true);
+},()=>setSynced(false));
+
+onSnapshot(query(collection(db,'historico'),orderBy('criadoEm','asc')),snap=>{
+  historico=snap.docs.map(d=>({id:d.id,...d.data()}));
   setSynced(true);
-}, ()=>setSynced(false));
+},()=>setSynced(false));
 
 </script>
 </body>
