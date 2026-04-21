@@ -107,6 +107,10 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
 .delta-sub{font-size:10px;margin-top:2px;}
 .loading{text-align:center;padding:2rem;font-size:13px;color:#888;}
 .hidden{display:none!important;}
+.d-section-header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:10px;margin-bottom:6px;font-size:13px;font-weight:500;color:#fff;}
+.d-header-16{background:#185FA5;}
+.d-header-25{background:#BA7517;}
+.d-total-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#1a1a1a;border-radius:10px;margin-top:4px;font-size:14px;font-weight:500;color:#fff;}
 </style>
 </head>
 <body>
@@ -338,11 +342,18 @@ function renderReceitas(){
 function renderDespesas(){
   const el = document.getElementById('d-list');
   if(!despesas.length){ el.innerHTML='<div class="empty">Nenhuma despesa adicionada.</div>'; return; }
-  el.innerHTML = despesas.map(p=>{
+
+  const d16 = despesas.filter(p=>p.date===16);
+  const d25 = despesas.filter(p=>p.date===25);
+  const t16 = d16.reduce((a,p)=>a+p.valor,0);
+  const t25 = d25.reduce((a,p)=>a+p.valor,0);
+  const total = t16+t25;
+
+  function itemHtml(p){
     const periodo = p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
     return`<div class="list-item">
       <div style="flex:1;min-width:0">
-        <div class="list-name">${p.desc}<span class="badge badge-${p.date}">dia ${p.date}</span></div>
+        <div class="list-name">${p.desc}</div>
         <div class="list-meta">${periodo||'Sem período'}</div>
       </div>
       <div style="display:flex;align-items:center;gap:4px">
@@ -350,7 +361,24 @@ function renderDespesas(){
         <button class="btn-del" onclick="removeDespesa('${p.id}')">✕</button>
       </div>
     </div>`;
-  }).join('');
+  }
+
+  el.innerHTML = `
+    <div class="d-section-header d-header-16">
+      <span>Dia 16</span><span>${fmt(t16)}</span>
+    </div>
+    ${d16.length ? d16.map(itemHtml).join('') : '<div class="empty" style="background:#fff;border-radius:10px;margin-bottom:6px">Nenhuma despesa no dia 16.</div>'}
+
+    <div class="d-section-header d-header-25">
+      <span>Dia 25</span><span>${fmt(t25)}</span>
+    </div>
+    ${d25.length ? d25.map(itemHtml).join('') : '<div class="empty" style="background:#fff;border-radius:10px;margin-bottom:6px">Nenhuma despesa no dia 25.</div>'}
+
+    <div class="d-total-bar">
+      <span>Total de despesas</span>
+      <span>${fmt(total)}</span>
+    </div>
+  `;
 }
 
 window.updateMeta = function(){
