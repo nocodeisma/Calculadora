@@ -235,6 +235,21 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
   <div class="form-card">
     <div class="form-title">Nova despesa</div>
     <div class="field"><label>Descrição</label><input type="text" id="d-desc" placeholder="Ex: Aluguel, Conta de luz..."/></div>
+    <div class="field"><label>Categoria</label>
+      <select id="d-cat">
+        <option value="">-- Selecione --</option>
+        <option value="Moradia">🏠 Moradia</option>
+        <option value="Saúde">❤️ Saúde</option>
+        <option value="Transporte">🚗 Transporte</option>
+        <option value="Educação">📚 Educação</option>
+        <option value="Alimentação">🍽️ Alimentação</option>
+        <option value="Pessoal">👤 Pessoal</option>
+        <option value="Financeiro">💳 Financeiro</option>
+        <option value="Família">👨‍👩‍👧 Família</option>
+        <option value="Serviços">⚡ Serviços</option>
+        <option value="Outros">📦 Outros</option>
+      </select>
+    </div>
     <div class="field"><label>Valor (R$)</label><input type="number" id="d-valor" placeholder="0,00" min="0" step="0.01"/></div>
     <div class="grid2">
       <div><label>Mês</label>
@@ -297,7 +312,7 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 
-var receitas=[], despesas=[], historico=[], rDate=16, dDate=16, modalTipo='';
+var receitas=[], despesas=[], historico=[], rDate=16, dDate=16, modalTipo='', viewMode='dia';
 
 function setSynced(ok){ document.getElementById('sync-dot').className='sync-dot '+(ok?'ok':'err'); }
 function fmt(v){ return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
@@ -358,9 +373,11 @@ function addDespesa(){
   if(!desc){document.getElementById('d-desc').focus();return;}
   if(!valor)return;
   var btn=document.getElementById('d-btn-add'); btn.disabled=true;
-  db.collection('despesas').add({desc:desc,valor:valor,date:dDate,mes:mes,ano:ano,criadoEm:firebase.firestore.FieldValue.serverTimestamp()})
+  var cat=document.getElementById('d-cat').value||'📦 Outros';
+  db.collection('despesas').add({desc:desc,valor:valor,cat:cat,date:dDate,mes:mes,ano:ano,criadoEm:firebase.firestore.FieldValue.serverTimestamp()})
   .then(function(){
     ['d-desc','d-valor'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('d-cat').value='';
     document.getElementById('d-desc').focus();
     setSynced(true);
   }).catch(function(e){setSynced(false);alert('Erro: '+e.message);})
@@ -410,24 +427,65 @@ function renderReceitas(){
   updateMeta();
 }
 
+function toggleViewMode(){
+  viewMode=viewMode==='dia'?'categoria':'dia';
+  document.getElementById('d-toggle-btn').textContent=viewMode==='dia'?'📂 Ver por categoria':'📅 Ver por dia de pagamento';
+  renderDespesas();
+}
+
 function renderDespesas(){
   var el=document.getElementById('d-list');
   var wrap=document.getElementById('d-fechar-wrap');
   if(!despesas.length){el.innerHTML='<div class="empty">Nenhuma despesa adicionada.</div>';wrap.classList.add('hidden');return;}
   wrap.classList.remove('hidden');
-  var d16=despesas.filter(function(p){return p.date===16;});
-  var d25=despesas.filter(function(p){return p.date===25;});
-  var t16=d16.reduce(function(a,p){return a+p.valor;},0);
-  var t25=d25.reduce(function(a,p){return a+p.valor;},0);
+  var total=despesas.reduce(function(a,p){return a+p.valor;},0);
+  var CATS_EMOJI={'Moradia':'🏠','Saúde':'❤️','Transporte':'🚗','Educação':'📚','Alimentação':'🍽️','Pessoal':'👤','Financeiro':'💳','Família':'👨‍👩‍👧','Serviços':'⚡','Outros':'📦'};
+  var CAT_ORDER=['Moradia','Saúde','Transporte','Educação','Alimentação','Pessoal','Financeiro','Família','Serviços','Outros'];
+
   function itemHtml(p){
     var periodo=p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
-    return'<div class="list-item"><div style="flex:1;min-width:0"><div class="list-name">'+p.desc+'</div><div class="list-meta">'+(periodo||'Sem período')+'</div></div><div style="display:flex;align-items:center;gap:4px"><span class="list-val" style="color:#a32d2d">'+fmt(p.valor)+'</span><button class="btn-del" onclick="removeDespesa(\''+p.id+'\')">✕</button></div></div>';
+    var catEmoji=p.cat?(CATS_EMOJI[p.cat]||'📦')+' '+p.cat:'';
+    var meta='';
+    if(viewMode==='dia') meta=catEmoji?(catEmoji+' · '):'';
+    else meta='<span class="badge badge-'+p.date+'" style="margin-left:0;margin-right:4px">dia '+p.date+'</span>';
+    return'<div class="list-item"><div style="flex:1;min-width:0"><div class="list-name">'+p.desc+'</div><div class="list-meta">'+meta+(periodo||'Sem período')+'</div></div><div style="display:flex;align-items:center;gap:4px"><span class="list-val" style="color:#a32d2d">'+fmt(p.valor)+'</span><button class="btn-del" onclick="removeDespesa(''+p.id+'')">✕</button></div></div>';
   }
-  var html='<div class="d-section-header d-header-16"><span>Dia 16</span><span>'+fmt(t16)+'</span></div>';
-  html+=d16.length?d16.map(itemHtml).join(''):'<div class="empty" style="background:#fff;border-radius:10px;margin-bottom:6px">Nenhuma despesa no dia 16.</div>';
-  html+='<div class="d-section-header d-header-25" style="margin-top:8px"><span>Dia 25</span><span>'+fmt(t25)+'</span></div>';
-  html+=d25.length?d25.map(itemHtml).join(''):'<div class="empty" style="background:#fff;border-radius:10px;margin-bottom:6px">Nenhuma despesa no dia 25.</div>';
-  html+='<div class="d-total-bar"><span>Total de despesas</span><span>'+fmt(t16+t25)+'</span></div>';
+
+  var toggle='<div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><button id="d-toggle-btn" onclick="toggleViewMode()" style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:inherit;color:#1a1a1a;">'+(viewMode==='dia'?'📂 Ver por categoria':'📅 Ver por dia de pagamento')+'</button></div>';
+  var html=toggle;
+
+  if(viewMode==='dia'){
+    var d16=despesas.filter(function(p){return p.date===16;});
+    var d25=despesas.filter(function(p){return p.date===25;});
+    var t16=d16.reduce(function(a,p){return a+p.valor;},0);
+    var t25=d25.reduce(function(a,p){return a+p.valor;},0);
+    html+='<div class="d-section-header d-header-16"><span>Dia 16</span><span>'+fmt(t16)+'</span></div>';
+    html+=d16.length?d16.map(itemHtml).join(''):'<div class="empty" style="background:#fff;border-radius:10px;margin-bottom:6px">Nenhuma despesa no dia 16.</div>';
+    html+='<div class="d-section-header d-header-25" style="margin-top:8px"><span>Dia 25</span><span>'+fmt(t25)+'</span></div>';
+    html+=d25.length?d25.map(itemHtml).join(''):'<div class="empty" style="background:#fff;border-radius:10px;margin-bottom:6px">Nenhuma despesa no dia 25.</div>';
+  } else {
+    var grupos={};
+    despesas.forEach(function(p){var c=p.cat||'Outros';if(!grupos[c])grupos[c]=[];grupos[c].push(p);});
+    CAT_ORDER.forEach(function(cat){
+      if(!grupos[cat])return;
+      var itens=grupos[cat];
+      var tot=itens.reduce(function(a,p){return a+p.valor;},0);
+      var pct=total>0?(tot/total*100).toFixed(1):'0.0';
+      var emoji=CATS_EMOJI[cat]||'📦';
+      html+='<div style="background:#1a1a1a;padding:10px 14px;border-radius:10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;"><span style="color:#fff;font-size:13px;font-weight:500;">'+emoji+' '+cat+'</span><span style="color:#fff;font-size:13px;">'+fmt(tot)+'<span style="opacity:0.6;font-size:11px;margin-left:6px;">'+pct+'%</span></span></div>';
+      html+=itens.map(itemHtml).join('');
+    });
+    Object.keys(grupos).forEach(function(cat){
+      if(CAT_ORDER.indexOf(cat)>=0)return;
+      var itens=grupos[cat];
+      var tot=itens.reduce(function(a,p){return a+p.valor;},0);
+      var pct=total>0?(tot/total*100).toFixed(1):'0.0';
+      html+='<div style="background:#1a1a1a;padding:10px 14px;border-radius:10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;"><span style="color:#fff;font-size:13px;font-weight:500;">📦 '+cat+'</span><span style="color:#fff;font-size:13px;">'+fmt(tot)+'<span style="opacity:0.6;font-size:11px;margin-left:6px;">'+pct+'%</span></span></div>';
+      html+=itens.map(itemHtml).join('');
+    });
+  }
+
+  html+='<div class="d-total-bar" style="margin-top:8px;"><span>Total de despesas</span><span>'+fmt(total)+'</span></div>';
   el.innerHTML=html;
 }
 
