@@ -1,11 +1,9 @@
 <!DOCTYPE html>
-<!-- v9 -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
-<meta http-equiv="Pragma" content="no-cache"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <title>Finanças</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -13,99 +11,86 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f0ee;color:#1a1a1a;min-height:100vh;}
 .nav{background:#1a1a1a;display:flex;align-items:center;gap:10px;padding:0 16px;position:sticky;top:0;z-index:100;height:50px;}
-.btn-nav-back{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:0;line-height:1;}
+.btn-back{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:0;line-height:1;}
 .nav-title{color:#fff;font-size:15px;font-weight:500;flex:1;}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:#888;flex-shrink:0;transition:background 0.3s;}
-.sync-dot.ok{background:#4ade80;}
-.sync-dot.err{background:#f87171;}
+.sync-dot.ok{background:#4ade80;}.sync-dot.err{background:#f87171;}
 .home{padding:1.5rem 1rem 2rem;}
 .home-title{font-size:24px;font-weight:500;margin-bottom:4px;}
 .home-sub{font-size:13px;color:#666;margin-bottom:1.5rem;}
 .home-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
-.home-btn{border-radius:14px;padding:1.25rem;border:none;cursor:pointer;text-align:left;transition:transform 0.12s;width:100%;}
-.home-btn:active{transform:scale(0.97);}
-.home-btn-receita{background:#185FA5;color:#fff;}
-.home-btn-despesa{background:#1a1a1a;color:#fff;}
-.home-btn-historico{background:#5b3fa5;color:#fff;grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:1rem 1.25rem;border-radius:14px;margin-top:0;}
-.home-btn-historico .hbicon{font-size:20px;}
-.home-btn-historico .hbtitle{font-size:15px;font-weight:500;}
-.home-btn-historico .hblabel{font-size:11px;opacity:0.7;display:block;text-transform:uppercase;letter-spacing:0.05em;}
-.home-btn-icon{font-size:22px;margin-bottom:8px;}
-.home-btn-label{font-size:11px;opacity:0.7;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:2px;}
-.home-btn-title{font-size:16px;font-weight:500;}
-.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-.summary-card{background:#fff;border-radius:12px;padding:14px;border:1px solid #e5e5e5;}
-.summary-card.full{grid-column:1/-1;}
-.s-label{font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em;}
-.s-val{font-size:20px;font-weight:500;}
-.s-val.green{color:#2d7a2d;}.s-val.red{color:#a32d2d;}.s-val.blue{color:#185FA5;}
-.s-sub{font-size:11px;color:#999;margin-top:2px;}
+.hbtn{border-radius:14px;padding:1.25rem;border:none;cursor:pointer;text-align:left;transition:transform 0.12s;width:100%;font-family:inherit;}
+.hbtn:active{transform:scale(0.97);}
+.hbtn-r{background:#185FA5;color:#fff;}.hbtn-d{background:#1a1a1a;color:#fff;}
+.hbtn-h{background:#5b3fa5;color:#fff;width:100%;border-radius:14px;padding:1rem 1.25rem;border:none;cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:12px;font-family:inherit;}
+.hbtn-icon{font-size:22px;margin-bottom:8px;}
+.hbtn-label{font-size:11px;opacity:0.7;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:2px;}
+.hbtn-title{font-size:16px;font-weight:500;}
+.card{background:#fff;border-radius:12px;padding:14px;border:1px solid #e5e5e5;margin-bottom:12px;}
+.card.full{grid-column:1/-1;}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.slabel{font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.sval{font-size:20px;font-weight:500;}
+.sval.g{color:#2d7a2d;}.sval.r{color:#a32d2d;}.sval.b{color:#185FA5;}
+.ssub{font-size:11px;color:#999;margin-top:2px;}
 .prog-wrap{margin-top:10px;}
 .prog-label{display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:4px;}
 .prog-bg{height:8px;background:#f0f0ee;border-radius:99px;overflow:hidden;}
 .prog-fill{height:100%;border-radius:99px;transition:width 0.4s;}
-.chart-wrap{background:#fff;border-radius:12px;padding:14px;border:1px solid #e5e5e5;margin-bottom:12px;}
-.chart-title{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px;}
 .day-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
 .day-card{border-radius:12px;overflow:hidden;border:1px solid #e5e5e5;}
-.day-header{padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}
-.day-header-16{background:#185FA5;}.day-header-25{background:#BA7517;}
-.day-header span{font-size:12px;font-weight:500;color:#fff;}
+.day-hdr{padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}
+.day-hdr-16{background:#185FA5;}.day-hdr-25{background:#BA7517;}
+.day-hdr span{font-size:12px;font-weight:500;color:#fff;}
 .day-body{background:#fff;padding:6px 0;}
 .day-row{padding:5px 12px;display:flex;justify-content:space-between;font-size:11px;border-bottom:1px solid #f5f5f5;}
 .day-row:last-child{border-bottom:none;}
-.day-row-label{color:#888;}.day-row-val{font-weight:500;}
-.day-row-val.green{color:#2d7a2d;}.day-row-val.red{color:#a32d2d;}
+.day-rl{color:#888;}.day-rv{font-weight:500;}
+.day-rv.g{color:#2d7a2d;}.day-rv.r{color:#a32d2d;}
+.chart-wrap{background:#fff;border-radius:12px;padding:14px;border:1px solid #e5e5e5;margin-bottom:12px;}
+.chart-title{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px;}
 .section{padding:0 1rem 2rem;}
-.form-card{background:#fff;border-radius:12px;padding:1.25rem;margin-bottom:1rem;border:1px solid #e5e5e5;}
-.form-title{font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;}
+.fcard{background:#fff;border-radius:12px;padding:1.25rem;margin-bottom:1rem;border:1px solid #e5e5e5;}
+.ftitle{font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;}
 .field{margin-bottom:10px;}
 label{font-size:12px;color:#666;display:block;margin-bottom:4px;}
 input[type=text],input[type=number],select{width:100%;padding:9px 11px;font-size:14px;border:1px solid #ddd;border-radius:8px;background:#fafafa;color:#1a1a1a;font-family:inherit;outline:none;}
 input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06);}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;}
-.date-toggle{display:flex;gap:8px;margin-bottom:10px;}
-.date-btn{flex:1;padding:9px;font-size:13px;font-weight:500;border:2px solid #ddd;border-radius:8px;background:#f5f5f3;color:#888;cursor:pointer;font-family:inherit;transition:all 0.15s;}
-.date-btn-16.sel{background:#185FA5;border-color:#0C447C;color:#fff;}
-.date-btn-25.sel{background:#BA7517;border-color:#854F0B;color:#fff;}
-.subtotal-preview{display:flex;align-items:center;justify-content:space-between;background:#f5f5f3;border-radius:8px;padding:10px 14px;margin-top:8px;}
-.subtotal-preview span{font-size:12px;color:#666;}
-.subtotal-preview strong{font-size:16px;font-weight:500;}
+.dtoggle{display:flex;gap:8px;margin-bottom:10px;}
+.dbtn{flex:1;padding:9px;font-size:13px;font-weight:500;border:2px solid #ddd;border-radius:8px;background:#f5f5f3;color:#888;cursor:pointer;font-family:inherit;transition:all 0.15s;}
+.dbtn-16.sel{background:#185FA5;border-color:#0C447C;color:#fff;}
+.dbtn-25.sel{background:#BA7517;border-color:#854F0B;color:#fff;}
+.sub-prev{display:flex;align-items:center;justify-content:space-between;background:#f5f5f3;border-radius:8px;padding:10px 14px;margin-top:8px;}
+.sub-prev span{font-size:12px;color:#666;}
+.sub-prev strong{font-size:16px;font-weight:500;}
 .btn-add{width:100%;padding:10px;font-size:14px;font-weight:500;border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:inherit;margin-top:10px;}
-.btn-add.receita{background:#185FA5;}.btn-add.despesa{background:#1a1a1a;}
+.btn-add.r{background:#185FA5;}.btn-add.d{background:#1a1a1a;}
 .btn-add:active{opacity:0.85;}.btn-add:disabled{opacity:0.5;cursor:not-allowed;}
 .btn-fechar{width:100%;padding:11px;font-size:14px;font-weight:500;border:2px solid #5b3fa5;border-radius:8px;color:#5b3fa5;background:#fff;cursor:pointer;font-family:inherit;margin-top:8px;}
 .btn-fechar:hover{background:#5b3fa5;color:#fff;}
-.list-item{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:0.9rem 1.1rem;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
-.list-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.list-meta{font-size:11px;color:#888;margin-top:2px;}
+.litem{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:0.9rem 1.1rem;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.lname{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lmeta{font-size:11px;color:#888;margin-top:2px;}
 .badge{display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:99px;margin-left:5px;vertical-align:middle;}
 .badge-16{background:#185FA5;color:#fff;}.badge-25{background:#BA7517;color:#fff;}
-.list-val{font-size:13px;font-weight:500;white-space:nowrap;}
-.btn-del{background:none;border:none;cursor:pointer;font-size:14px;color:#ccc;padding:0 0 0 6px;}
-.btn-del:hover{color:#e24b4a;}
+.lval{font-size:13px;font-weight:500;white-space:nowrap;}
+.bdel{background:none;border:none;cursor:pointer;font-size:14px;color:#ccc;padding:0 0 0 6px;}
+.bdel:hover{color:#e24b4a;}
 .empty{text-align:center;padding:2rem;font-size:13px;color:#bbb;}
-.goal-card{background:#fff;border-radius:12px;padding:1.25rem;margin-bottom:1rem;border:1px solid #e5e5e5;}
-.delta-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px;}
-.delta-box{border-radius:8px;padding:11px 14px;}
-.delta-box.neutral{background:#f5f5f3;}.delta-box.pos{background:#eaf3de;}.delta-box.neg{background:#fcebeb;}
-.delta-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;}
-.delta-box.neutral .delta-label,.delta-box.neutral .delta-val,.delta-box.neutral .delta-sub{color:#888;}
-.delta-box.pos .delta-label,.delta-box.pos .delta-val,.delta-box.pos .delta-sub{color:#3b6d11;}
-.delta-box.neg .delta-label,.delta-box.neg .delta-val,.delta-box.neg .delta-sub{color:#a32d2d;}
-.delta-val{font-size:15px;font-weight:500;}.delta-sub{font-size:10px;margin-top:2px;}
-.d-section-header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:10px;margin-bottom:6px;font-size:13px;font-weight:500;color:#fff;}
-.d-header-16{background:#185FA5;}.d-header-25{background:#BA7517;}
-.d-total-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#1a1a1a;border-radius:10px;margin-top:4px;font-size:14px;font-weight:500;color:#fff;}
-.hist-card{background:#fff;border-radius:12px;border:1px solid #e5e5e5;margin-bottom:12px;overflow:hidden;}
-.hist-header{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;}
-.hist-header span{color:#fff;font-size:14px;font-weight:500;}
-.hist-body{padding:12px 16px;}
-.hist-section-label{font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;}
-.hist-item{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #f5f5f5;}
-.hist-item:last-child{border-bottom:none;}
-.hist-total{display:flex;justify-content:space-between;padding:10px 0 0;margin-top:8px;border-top:1px solid #e5e5e5;font-size:14px;font-weight:500;}
+.dshdr{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:10px;margin-bottom:6px;font-size:13px;font-weight:500;color:#fff;}
+.dshdr-16{background:#185FA5;}.dshdr-25{background:#BA7517;}
+.dtotal{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#1a1a1a;border-radius:10px;margin-top:4px;font-size:14px;font-weight:500;color:#fff;}
+.delta-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;}
+.dbox{border-radius:8px;padding:11px 14px;}
+.dbox.n{background:#f5f5f3;}.dbox.p{background:#eaf3de;}.dbox.ng{background:#fcebeb;}
+.dlabel{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;}
+.dbox.n .dlabel,.dbox.n .dval,.dbox.n .dsub{color:#888;}
+.dbox.p .dlabel,.dbox.p .dval,.dbox.p .dsub{color:#3b6d11;}
+.dbox.ng .dlabel,.dbox.ng .dval,.dbox.ng .dsub{color:#a32d2d;}
+.dval{font-size:15px;font-weight:500;}.dsub{font-size:10px;margin-top:2px;}
+.hist-card{background:#fff;border-radius:12px;border:1px solid #e5e5e5;margin-bottom:10px;overflow:hidden;}
 .hist-del{background:none;border:1px solid #e5e5e5;border-radius:6px;padding:4px 10px;font-size:11px;color:#888;cursor:pointer;margin-top:10px;font-family:inherit;}
 .hist-del:hover{border-color:#e24b4a;color:#e24b4a;}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:flex-end;}
@@ -113,9 +98,8 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
 .modal-title{font-size:16px;font-weight:500;margin-bottom:6px;}
 .modal-sub{font-size:13px;color:#666;margin-bottom:1.25rem;}
 .modal-actions{display:flex;gap:10px;margin-top:1rem;}
-.modal-btn{flex:1;padding:11px;font-size:14px;font-weight:500;border-radius:8px;cursor:pointer;font-family:inherit;border:none;}
-.modal-btn-cancel{background:#f0f0ee;color:#666;}
-.modal-btn-confirm{background:#5b3fa5;color:#fff;}
+.mbtn{flex:1;padding:11px;font-size:14px;font-weight:500;border-radius:8px;cursor:pointer;font-family:inherit;border:none;}
+.mbtn-c{background:#f0f0ee;color:#666;}.mbtn-ok{background:#5b3fa5;color:#fff;}
 .loading{text-align:center;padding:2rem;font-size:13px;color:#888;}
 .hidden{display:none!important;}
 </style>
@@ -123,87 +107,58 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
 <body>
 
 <div class="nav">
-  <button class="btn-nav-back hidden" id="btn-nav-back" onclick="goTo('home')">←</button>
+  <button class="btn-back hidden" id="btn-back" onclick="goTo('home')">←</button>
   <span class="nav-title" id="nav-title">💰 Finanças</span>
-  <span id="sync-label" style="font-size:10px;color:#888;margin-right:2px;"></span>
   <div class="sync-dot" id="sync-dot"></div>
 </div>
 
+<!-- HOME -->
 <div id="page-home" class="home">
   <div class="home-title">Olá 👋</div>
   <div class="home-sub">Gerencie suas receitas e despesas</div>
   <div class="home-btns">
-    <button class="home-btn home-btn-receita" onclick="goTo('receita')">
-      <div class="home-btn-icon">📈</div>
-      <span class="home-btn-label">Entradas</span>
-      <div class="home-btn-title">Receitas</div>
+    <button class="hbtn hbtn-r" onclick="goTo('receita')">
+      <div class="hbtn-icon">📈</div>
+      <span class="hbtn-label">Entradas</span>
+      <div class="hbtn-title">Receitas</div>
     </button>
-    <button class="home-btn home-btn-despesa" onclick="goTo('despesa')">
-      <div class="home-btn-icon">📉</div>
-      <span class="home-btn-label">Saídas</span>
-      <div class="home-btn-title">Despesas</div>
+    <button class="hbtn hbtn-d" onclick="goTo('despesa')">
+      <div class="hbtn-icon">📉</div>
+      <span class="hbtn-label">Saídas</span>
+      <div class="hbtn-title">Despesas</div>
     </button>
   </div>
-  <button onclick="goTo('historico')" style="width:100%;margin-bottom:12px;background:#5b3fa5;color:#fff;border:none;border-radius:14px;padding:1rem 1.25rem;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;">
+  <button class="hbtn-h" onclick="goTo('historico')">
     <span style="font-size:20px;">📋</span>
-    <div>
-      <span style="font-size:11px;opacity:0.7;text-transform:uppercase;letter-spacing:0.05em;display:block;">Meses fechados</span>
-      <div style="font-size:15px;font-weight:500;">Histórico</div>
-    </div>
+    <div><span class="hbtn-label">Meses fechados</span><div class="hbtn-title">Histórico</div></div>
   </button>
-  <div id="home-meta-card" class="goal-card" style="margin-bottom:12px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <div class="form-title" style="margin:0;">Meta do mês</div>
-      <button id="meta-edit-btn" onclick="toggleMetaEdit()" style="background:none;border:1px solid #ddd;border-radius:6px;padding:4px 12px;font-size:12px;color:#666;cursor:pointer;font-family:inherit;">✏️ Editar</button>
+  <!-- META -->
+  <div class="fcard" style="margin-bottom:12px;">
+    <div class="ftitle">Meta e hora extra</div>
+    <div class="grid2">
+      <div><label>Meta (R$)</label><input type="number" id="r-meta" placeholder="40000" min="0" step="100" oninput="saveMeta()"/></div>
+      <div><label>Taxa hora extra (R$)</label><input type="number" id="r-taxa-extra" placeholder="160" min="0" step="0.01" oninput="saveMeta()"/></div>
     </div>
-
-    <!-- Modo leitura -->
-    <div id="meta-view" style="display:none">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-        <div style="background:#f5f5f3;border-radius:8px;padding:10px 14px;">
-          <div style="font-size:11px;color:#888;margin-bottom:2px;">Meta</div>
-          <div style="font-size:16px;font-weight:500;" id="meta-view-val">—</div>
-        </div>
-        <div style="background:#f5f5f3;border-radius:8px;padding:10px 14px;">
-          <div style="font-size:11px;color:#888;margin-bottom:2px;">Taxa hora extra</div>
-          <div style="font-size:16px;font-weight:500;" id="meta-view-taxa">—</div>
-        </div>
+    <div id="r-delta-row" style="display:none;">
+      <div class="delta-row">
+        <div class="dbox n"><div class="dlabel">Meta</div><div class="dval" id="r-val-meta">—</div></div>
+        <div class="dbox n" id="r-box-delta"><div class="dlabel">Delta</div><div class="dval" id="r-val-delta">—</div><div class="dsub" id="r-sub-delta">—</div></div>
+        <div class="dbox n" id="r-box-extra"><div class="dlabel">Horas extras</div><div class="dval" id="r-val-extra">—</div><div class="dsub" id="r-sub-extra">—</div></div>
       </div>
-    </div>
-
-    <!-- Modo edição -->
-    <div id="meta-edit" style="display:none">
-      <div class="grid2" style="margin-bottom:10px;">
-        <div><label>Meta (R$)</label><input type="number" id="r-meta" placeholder="40000" min="0" step="100"/></div>
-        <div><label>Taxa hora extra (R$)</label><input type="number" id="r-taxa-extra" placeholder="160" min="0" step="0.01"/></div>
-      </div>
-      <button onclick="confirmarMeta()" style="width:100%;padding:9px;background:#185FA5;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">Salvar meta</button>
-    </div>
-
-    <!-- Resultados -->
-    <div id="r-delta-row" style="display:none">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
-        <div class="delta-box neutral"><div class="delta-label">Meta</div><div class="delta-val" id="r-val-meta">—</div></div>
-        <div class="delta-box neutral" id="r-box-delta"><div class="delta-label">Delta</div><div class="delta-val" id="r-val-delta">—</div><div class="delta-sub" id="r-sub-delta">—</div></div>
-        <div class="delta-box neutral" id="r-box-extra"><div class="delta-label">Horas extras</div><div class="delta-val" id="r-val-extra">—</div><div class="delta-sub" id="r-sub-extra">—</div></div>
-      </div>
-      <div>
-        <div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:4px;">
-          <span>Progresso da meta</span><span id="r-pct-label">0%</span>
-        </div>
-        <div style="height:10px;background:#f0f0ee;border-radius:99px;overflow:hidden;">
-          <div id="r-pct-bar" style="height:100%;border-radius:99px;transition:width 0.4s;width:0%;background:#2d7a2d;"></div>
-        </div>
+      <div style="margin-bottom:4px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:4px;"><span>Progresso da meta</span><span id="r-pct-label">0%</span></div>
+        <div style="height:10px;background:#f0f0ee;border-radius:99px;overflow:hidden;"><div id="r-pct-bar" style="height:100%;border-radius:99px;transition:width 0.4s;width:0%;background:#185FA5;"></div></div>
       </div>
     </div>
   </div>
-  <div id="home-summary"><div class="loading">⏳ Carregando...</div></div>
+  <div id="home-summary"><div class="loading">Carregando...</div></div>
 </div>
 
+<!-- RECEITAS -->
 <div id="page-receita" class="section hidden">
   <div style="height:1rem"></div>
-  <div class="form-card">
-    <div class="form-title">Novo projeto</div>
+  <div class="fcard">
+    <div class="ftitle">Novo projeto</div>
     <div class="field"><label>Descrição</label><input type="text" id="r-desc" placeholder="Ex: Desenvolvimento site XYZ"/></div>
     <div class="grid3">
       <div><label>Taxa/hora (R$)</label><input type="number" id="r-taxa" placeholder="150" min="0" step="0.01" oninput="recalcPreview()"/></div>
@@ -221,23 +176,24 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
       <div><label>Ano</label><input type="number" id="r-ano" placeholder="2026" min="2020" max="2099"/></div>
     </div>
     <label>Data de pagamento</label>
-    <div class="date-toggle">
-      <button class="date-btn date-btn-16 sel" id="r-btn16" onclick="selDate('r',16)">Dia 16</button>
-      <button class="date-btn date-btn-25" id="r-btn25" onclick="selDate('r',25)">Dia 25</button>
+    <div class="dtoggle">
+      <button class="dbtn dbtn-16 sel" id="r-btn16" onclick="selDate('r',16)">Dia 16</button>
+      <button class="dbtn dbtn-25" id="r-btn25" onclick="selDate('r',25)">Dia 25</button>
     </div>
-    <div class="subtotal-preview"><span>Subtotal estimado</span><strong id="r-preview">R$ 0,00</strong></div>
-    <button class="btn-add receita" id="r-btn-add" onclick="addReceita()">+ Adicionar receita</button>
+    <div class="sub-prev"><span>Subtotal estimado</span><strong id="r-preview">R$ 0,00</strong></div>
+    <button class="btn-add r" id="r-btn-add" onclick="addReceita()">+ Adicionar receita</button>
   </div>
-  <div id="r-list"><div class="loading">⏳ Carregando...</div></div>
-  <div style="margin-top:4px;padding:0 0 1rem">
+  <div id="r-list"><div class="loading">Carregando...</div></div>
+  <div style="padding:0 0 1rem;">
     <button class="btn-fechar" onclick="abrirModal('receita')">📋 Fechar mês — Receitas</button>
   </div>
 </div>
 
+<!-- DESPESAS -->
 <div id="page-despesa" class="section hidden">
   <div style="height:1rem"></div>
-  <div class="form-card">
-    <div class="form-title">Nova despesa</div>
+  <div class="fcard">
+    <div class="ftitle">Nova despesa</div>
     <div class="field"><label>Descrição</label><input type="text" id="d-desc" placeholder="Ex: Aluguel, Conta de luz..."/></div>
     <div class="field"><label>Categoria</label>
       <select id="d-cat">
@@ -266,23 +222,25 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
       <div><label>Ano</label><input type="number" id="d-ano" placeholder="2026" min="2020" max="2099"/></div>
     </div>
     <label>Data de pagamento</label>
-    <div class="date-toggle">
-      <button class="date-btn date-btn-16 sel" id="d-btn16" onclick="selDate('d',16)">Dia 16</button>
-      <button class="date-btn date-btn-25" id="d-btn25" onclick="selDate('d',25)">Dia 25</button>
+    <div class="dtoggle">
+      <button class="dbtn dbtn-16 sel" id="d-btn16" onclick="selDate('d',16)">Dia 16</button>
+      <button class="dbtn dbtn-25" id="d-btn25" onclick="selDate('d',25)">Dia 25</button>
     </div>
-    <button class="btn-add despesa" id="d-btn-add" onclick="addDespesa()">+ Adicionar despesa</button>
+    <button class="btn-add d" id="d-btn-add" onclick="addDespesa()">+ Adicionar despesa</button>
   </div>
-  <div id="d-list"><div class="loading">⏳ Carregando...</div></div>
-  <div id="d-fechar-wrap" class="hidden" style="margin-top:4px;padding:0 0 1rem">
+  <div id="d-list"><div class="loading">Carregando...</div></div>
+  <div id="d-fechar-wrap" class="hidden" style="padding:0 0 1rem;">
     <button class="btn-fechar" onclick="abrirModal('despesa')">📋 Fechar mês — Despesas</button>
   </div>
 </div>
 
+<!-- HISTÓRICO -->
 <div id="page-historico" class="section hidden">
   <div style="height:1rem"></div>
-  <div id="hist-list"><div class="loading">⏳ Carregando...</div></div>
+  <div id="hist-list"><div class="loading">Carregando...</div></div>
 </div>
 
+<!-- MODAL -->
 <div class="modal-overlay hidden" id="modal-overlay">
   <div class="modal-box">
     <div class="modal-title" id="modal-title">Fechar mês</div>
@@ -298,40 +256,38 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
       <div><label>Ano</label><input type="number" id="modal-ano" placeholder="2026" min="2020" max="2099" value="2026"/></div>
     </div>
     <div class="modal-actions">
-      <button class="modal-btn modal-btn-cancel" onclick="fecharModal()">Cancelar</button>
-      <button class="modal-btn modal-btn-confirm" id="modal-confirm-btn" onclick="confirmarFechamento()">Confirmar</button>
+      <button class="mbtn mbtn-c" onclick="fecharModal()">Cancelar</button>
+      <button class="mbtn mbtn-ok" id="modal-confirm-btn" onclick="confirmarFechamento()">Confirmar</button>
     </div>
   </div>
 </div>
 
 <script>
-var firebaseConfig = {
-  apiKey: "AIzaSyD_t1nhaoYlqTjOehAaGJyNpPfNt7Uv92g",
-  authDomain: "financeiro-f8dda.firebaseapp.com",
-  projectId: "financeiro-f8dda",
-  storageBucket: "financeiro-f8dda.firebasestorage.app",
-  messagingSenderId: "210397672861",
-  appId: "1:210397672861:web:d5f6a6207b26f4b95aeb74"
+var firebaseConfig={
+  apiKey:"AIzaSyD_t1nhaoYlqTjOehAaGJyNpPfNt7Uv92g",
+  authDomain:"financeiro-f8dda.firebaseapp.com",
+  projectId:"financeiro-f8dda",
+  storageBucket:"financeiro-f8dda.firebasestorage.app",
+  messagingSenderId:"210397672861",
+  appId:"1:210397672861:web:d5f6a6207b26f4b95aeb74"
 };
 firebase.initializeApp(firebaseConfig);
-var db = firebase.firestore();
+var db=firebase.firestore();
 
-var receitas=[], despesas=[], historico=[], rDate=16, dDate=16, modalTipo='', viewMode='dia';
+var receitas=[],despesas=[],historico=[],rDate=16,dDate=16,modalTipo='',viewMode='dia',saveMetaTimer=null;
+var CATS_EMOJI={Moradia:'🏠',Saúde:'❤️',Transporte:'🚗',Educação:'📚',Alimentação:'🍽️',Pessoal:'👤',Financeiro:'💳',Família:'👨‍👩‍👧',Serviços:'⚡',Outros:'📦'};
+var CAT_ORDER=['Moradia','Saúde','Transporte','Educação','Alimentação','Pessoal','Financeiro','Família','Serviços','Outros'];
 
-function setSynced(ok){
-  document.getElementById('sync-dot').className='sync-dot '+(ok?'ok':'err');
-  var lbl=document.getElementById('sync-label');
-  if(lbl) lbl.textContent=ok?'':'offline';
-}
-function fmt(v){ return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
-function calcSub(t,h,d){ return (parseFloat(t)||0)*(parseFloat(h)||0)*(parseFloat(d)||0); }
-function getTotalR(){ return receitas.reduce(function(a,p){return a+p.sub;},0); }
-function getTotalD(){ return despesas.reduce(function(a,p){return a+p.valor;},0); }
+function setSynced(ok){document.getElementById('sync-dot').className='sync-dot '+(ok?'ok':'err');}
+function fmt(v){return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function calcSub(t,h,d){return(parseFloat(t)||0)*(parseFloat(h)||0)*(parseFloat(d)||0);}
+function getTotalR(){return receitas.reduce(function(a,p){return a+p.sub;},0);}
+function getTotalD(){return despesas.reduce(function(a,p){return a+p.valor;},0);}
 
 function goTo(page){
   ['home','receita','despesa','historico'].forEach(function(p){document.getElementById('page-'+p).classList.add('hidden');});
   document.getElementById('page-'+page).classList.remove('hidden');
-  var back=document.getElementById('btn-nav-back');
+  var back=document.getElementById('btn-back');
   var titles={home:'💰 Finanças',receita:'📈 Receitas',despesa:'📉 Despesas',historico:'📋 Histórico'};
   document.getElementById('nav-title').textContent=titles[page];
   if(page==='home'){back.classList.add('hidden');renderHome();}
@@ -339,10 +295,10 @@ function goTo(page){
   if(page==='historico') renderHistorico();
 }
 
-function selDate(prefix,d){
-  if(prefix==='r') rDate=d; else dDate=d;
-  document.getElementById(prefix+'-btn16').className='date-btn date-btn-16'+(d===16?' sel':'');
-  document.getElementById(prefix+'-btn25').className='date-btn date-btn-25'+(d===25?' sel':'');
+function selDate(p,d){
+  if(p==='r') rDate=d; else dDate=d;
+  document.getElementById(p+'-btn16').className='dbtn dbtn-16'+(d===16?' sel':'');
+  document.getElementById(p+'-btn25').className='dbtn dbtn-25'+(d===25?' sel':'');
 }
 
 function recalcPreview(){
@@ -351,6 +307,40 @@ function recalcPreview(){
     document.getElementById('r-horas').value,
     document.getElementById('r-dias').value
   ));
+}
+
+function saveMeta(){
+  updateMeta();
+  clearTimeout(saveMetaTimer);
+  saveMetaTimer=setTimeout(function(){
+    var meta=parseFloat(document.getElementById('r-meta').value)||0;
+    var taxaExtra=parseFloat(document.getElementById('r-taxa-extra').value)||0;
+    db.collection('config').doc('meta').set({meta:meta,taxaExtra:taxaExtra})
+    .then(function(){setSynced(true);}).catch(function(){setSynced(false);});
+  },800);
+}
+
+function updateMeta(){
+  var meta=parseFloat(document.getElementById('r-meta').value)||0;
+  var taxaExtra=parseFloat(document.getElementById('r-taxa-extra').value)||0;
+  var total=getTotalR();
+  var dr=document.getElementById('r-delta-row');
+  if(!meta){dr.style.display='none';return;}
+  dr.style.display='block';
+  var delta=meta-total,atingiu=delta<=0;
+  var pct=Math.min(100,(total/meta*100));
+  document.getElementById('r-val-meta').textContent=fmt(meta);
+  document.getElementById('r-box-delta').className='dbox '+(atingiu?'p':'ng');
+  document.getElementById('r-val-delta').textContent=fmt(Math.abs(delta));
+  document.getElementById('r-sub-delta').textContent=atingiu?'acima da meta':'faltando';
+  document.getElementById('r-pct-label').textContent=pct.toFixed(1)+'%';
+  var bar=document.getElementById('r-pct-bar');
+  bar.style.width=pct.toFixed(1)+'%';
+  bar.style.background=atingiu?'#2d7a2d':(pct>=75?'#BA7517':'#185FA5');
+  var bx=document.getElementById('r-box-extra');
+  if(!atingiu&&taxaExtra>0){bx.className='dbox ng';document.getElementById('r-val-extra').textContent=(delta/taxaExtra).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'h';document.getElementById('r-sub-extra').textContent='a R$'+taxaExtra.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h';}
+  else if(atingiu){bx.className='dbox p';document.getElementById('r-val-extra').textContent='Meta atingida';document.getElementById('r-sub-extra').textContent='';}
+  else{bx.className='dbox n';document.getElementById('r-val-extra').textContent='—';document.getElementById('r-sub-extra').textContent='informe taxa extra';}
 }
 
 function addReceita(){
@@ -362,7 +352,7 @@ function addReceita(){
   var ano=document.getElementById('r-ano').value;
   if(!desc){document.getElementById('r-desc').focus();return;}
   if(!taxa||!horas||!dias)return;
-  var btn=document.getElementById('r-btn-add'); btn.disabled=true;
+  var btn=document.getElementById('r-btn-add');btn.disabled=true;
   db.collection('receitas').add({desc:desc,taxa:taxa,horas:horas,dias:dias,sub:calcSub(taxa,horas,dias),date:rDate,mes:mes,ano:ano,criadoEm:firebase.firestore.FieldValue.serverTimestamp()})
   .then(function(){
     ['r-desc','r-taxa','r-horas','r-dias'].forEach(function(id){document.getElementById(id).value='';});
@@ -375,25 +365,25 @@ function addReceita(){
 
 function addDespesa(){
   var desc=document.getElementById('d-desc').value.trim();
+  var cat=document.getElementById('d-cat').value||'Outros';
   var valor=parseFloat(document.getElementById('d-valor').value)||0;
   var mes=document.getElementById('d-mes').value;
   var ano=document.getElementById('d-ano').value;
   if(!desc){document.getElementById('d-desc').focus();return;}
   if(!valor)return;
-  var btn=document.getElementById('d-btn-add'); btn.disabled=true;
-  var cat=document.getElementById('d-cat').value||'📦 Outros';
-  db.collection('despesas').add({desc:desc,valor:valor,cat:cat,date:dDate,mes:mes,ano:ano,criadoEm:firebase.firestore.FieldValue.serverTimestamp()})
+  var btn=document.getElementById('d-btn-add');btn.disabled=true;
+  db.collection('despesas').add({desc:desc,cat:cat,valor:valor,date:dDate,mes:mes,ano:ano,criadoEm:firebase.firestore.FieldValue.serverTimestamp()})
   .then(function(){
     ['d-desc','d-valor'].forEach(function(id){document.getElementById(id).value='';});
-  document.getElementById('d-cat').value='';
+    document.getElementById('d-cat').value='';
     document.getElementById('d-desc').focus();
     setSynced(true);
   }).catch(function(e){setSynced(false);alert('Erro: '+e.message);})
   .finally(function(){btn.disabled=false;});
 }
 
-function removeReceita(id){ db.collection('receitas').doc(id).delete().then(function(){setSynced(true);}).catch(function(){setSynced(false);}); }
-function removeDespesa(id){ db.collection('despesas').doc(id).delete().then(function(){setSynced(true);}).catch(function(){setSynced(false);}); }
+function removeReceita(id){db.collection('receitas').doc(id).delete().then(function(){setSynced(true);}).catch(function(){setSynced(false);});}
+function removeDespesa(id){db.collection('despesas').doc(id).delete().then(function(){setSynced(true);}).catch(function(){setSynced(false);});}
 function removeHistorico(id){
   if(!confirm('Remover este mês do histórico?'))return;
   db.collection('historico').doc(id).delete().then(function(){setSynced(true);renderHistorico();}).catch(function(){setSynced(false);});
@@ -405,22 +395,20 @@ function abrirModal(tipo){
   document.getElementById('modal-sub').textContent='Todos os lançamentos de '+(tipo==='receita'?'receitas':'despesas')+' serão copiados para o histórico.';
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
-function fecharModal(){ document.getElementById('modal-overlay').classList.add('hidden'); }
+function fecharModal(){document.getElementById('modal-overlay').classList.add('hidden');}
 
 function confirmarFechamento(){
   var mes=document.getElementById('modal-mes').value;
   var ano=document.getElementById('modal-ano').value;
   if(!mes||!ano){alert('Selecione mês e ano.');return;}
-  var btn=document.getElementById('modal-confirm-btn'); btn.disabled=true;
-  var itens = modalTipo==='receita'
-    ? receitas.map(function(p){return{desc:p.desc,valor:p.sub,taxa:p.taxa,horas:p.horas,dias:p.dias,date:p.date};})
-    : despesas.map(function(p){return{desc:p.desc,valor:p.valor,date:p.date};});
+  var btn=document.getElementById('modal-confirm-btn');btn.disabled=true;
+  var itens=modalTipo==='receita'
+    ?receitas.map(function(p){return{desc:p.desc,valor:p.sub,taxa:p.taxa,horas:p.horas,dias:p.dias,date:p.date};})
+    :despesas.map(function(p){return{desc:p.desc,cat:p.cat||'Outros',valor:p.valor,date:p.date};});
   var total=itens.reduce(function(a,p){return a+p.valor;},0);
   db.collection('historico').add({tipo:modalTipo,mes:mes,ano:ano,itens:itens,total:total,criadoEm:firebase.firestore.FieldValue.serverTimestamp()})
-  .then(function(){
-    setSynced(true); fecharModal();
-    alert('Mês fechado! Veja em Histórico.');
-  }).catch(function(e){setSynced(false);alert('Erro: '+e.message);})
+  .then(function(){setSynced(true);fecharModal();alert('Mês fechado! Veja em Histórico.');})
+  .catch(function(e){setSynced(false);alert('Erro: '+e.message);})
   .finally(function(){btn.disabled=false;});
 }
 
@@ -430,14 +418,13 @@ function renderReceitas(){
   el.innerHTML=receitas.map(function(p){
     var th=(p.horas*p.dias).toLocaleString('pt-BR',{maximumFractionDigits:1});
     var periodo=p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
-    return'<div class="list-item"><div style="flex:1;min-width:0"><div class="list-name">'+p.desc+'<span class="badge badge-'+p.date+'">dia '+p.date+'</span></div><div class="list-meta">R$'+p.taxa.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h · '+p.horas+'h/dia · '+p.dias+'d · '+th+'h'+(periodo?' · '+periodo:'')+'</div></div><div style="display:flex;align-items:center;gap:4px"><span class="list-val">'+fmt(p.sub)+'</span><button class="btn-del" onclick="removeReceita(\''+p.id+'\')">✕</button></div></div>';
+    return'<div class="litem"><div style="flex:1;min-width:0"><div class="lname">'+p.desc+'<span class="badge badge-'+p.date+'">dia '+p.date+'</span></div><div class="lmeta">R$'+p.taxa.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h · '+p.horas+'h/dia · '+p.dias+'d · '+th+'h'+(periodo?' · '+periodo:'')+'</div></div><div style="display:flex;align-items:center;gap:4px"><span class="lval">'+fmt(p.sub)+'</span><button class="bdel" onclick="removeReceita(\''+p.id+'\')">✕</button></div></div>';
   }).join('');
   updateMeta();
 }
 
 function toggleViewMode(){
   viewMode=viewMode==='dia'?'categoria':'dia';
-  document.getElementById('d-toggle-btn').textContent=viewMode==='dia'?'📂 Ver por categoria':'📅 Ver por dia de pagamento';
   renderDespesas();
 }
 
@@ -447,29 +434,27 @@ function renderDespesas(){
   if(!despesas.length){el.innerHTML='<div class="empty">Nenhuma despesa adicionada.</div>';wrap.classList.add('hidden');return;}
   wrap.classList.remove('hidden');
   var total=despesas.reduce(function(a,p){return a+p.valor;},0);
-  var CATS_EMOJI={'Moradia':'🏠','Saúde':'❤️','Transporte':'🚗','Educação':'📚','Alimentação':'🍽️','Pessoal':'👤','Financeiro':'💳','Família':'👨‍👩‍👧','Serviços':'⚡','Outros':'📦'};
-  var CAT_ORDER=['Moradia','Saúde','Transporte','Educação','Alimentação','Pessoal','Financeiro','Família','Serviços','Outros'];
 
   function itemHtml(p){
     var periodo=p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
-    var catEmoji=p.cat?(CATS_EMOJI[p.cat]||'📦')+' '+p.cat:'';
-    var meta='';
-    if(viewMode==='dia') meta=catEmoji?(catEmoji+' · '):'';
-    else meta='<span class="badge badge-'+p.date+'" style="margin-left:0;margin-right:4px">dia '+p.date+'</span>';
-    return'<div class="list-item"><div style="flex:1;min-width:0"><div class="list-name">'+p.desc+'</div><div class="list-meta">'+meta+(periodo||'Sem período')+'</div></div><div style="display:flex;align-items:center;gap:4px"><span class="list-val" style="color:#a32d2d">'+fmt(p.valor)+'</span><button class="btn-del" onclick="removeDespesa(''+p.id+'')">✕</button></div></div>';
+    var catLabel=p.cat?(CATS_EMOJI[p.cat]||'📦')+' '+p.cat:'';
+    var meta2='';
+    if(viewMode==='dia') meta2=catLabel?(catLabel+' · '):'';
+    else meta2='<span class="badge badge-'+p.date+'" style="margin-left:0;margin-right:4px">dia '+p.date+'</span>';
+    return'<div class="litem"><div style="flex:1;min-width:0"><div class="lname">'+p.desc+'</div><div class="lmeta">'+meta2+(periodo||'Sem período')+'</div></div><div style="display:flex;align-items:center;gap:4px"><span class="lval" style="color:#a32d2d">'+fmt(p.valor)+'</span><button class="bdel" onclick="removeDespesa(\''+p.id+'\')">✕</button></div></div>';
   }
 
-  var toggle='<div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><button id="d-toggle-btn" onclick="toggleViewMode()" style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:inherit;color:#1a1a1a;">'+(viewMode==='dia'?'📂 Ver por categoria':'📅 Ver por dia de pagamento')+'</button></div>';
-  var html=toggle;
+  var toggleBtn='<div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><button onclick="toggleViewMode()" style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:inherit;color:#1a1a1a;">'+(viewMode==='dia'?'📂 Ver por categoria':'📅 Ver por dia de pagamento')+'</button></div>';
+  var html=toggleBtn;
 
   if(viewMode==='dia'){
     var d16=despesas.filter(function(p){return p.date===16;});
     var d25=despesas.filter(function(p){return p.date===25;});
     var t16=d16.reduce(function(a,p){return a+p.valor;},0);
     var t25=d25.reduce(function(a,p){return a+p.valor;},0);
-    html+='<div class="d-section-header d-header-16"><span>Dia 16</span><span>'+fmt(t16)+'</span></div>';
+    html+='<div class="dshdr dshdr-16"><span>Dia 16</span><span>'+fmt(t16)+'</span></div>';
     html+=d16.length?d16.map(itemHtml).join(''):'<div class="empty" style="background:#fff;border-radius:10px;margin-bottom:6px">Nenhuma despesa no dia 16.</div>';
-    html+='<div class="d-section-header d-header-25" style="margin-top:8px"><span>Dia 25</span><span>'+fmt(t25)+'</span></div>';
+    html+='<div class="dshdr dshdr-25" style="margin-top:8px"><span>Dia 25</span><span>'+fmt(t25)+'</span></div>';
     html+=d25.length?d25.map(itemHtml).join(''):'<div class="empty" style="background:#fff;border-radius:10px;margin-bottom:6px">Nenhuma despesa no dia 25.</div>';
   } else {
     var grupos={};
@@ -492,178 +477,90 @@ function renderDespesas(){
       html+=itens.map(itemHtml).join('');
     });
   }
-
-  html+='<div class="d-total-bar" style="margin-top:8px;"><span>Total de despesas</span><span>'+fmt(total)+'</span></div>';
+  html+='<div class="dtotal"><span>Total de despesas</span><span>'+fmt(total)+'</span></div>';
   el.innerHTML=html;
 }
 
 function toggleMes(key){
-  var el=document.getElementById('hist-body-'+key);
-  var arr=document.getElementById('hist-arrow-'+key);
+  var el=document.getElementById('hb-'+key);
+  var arr=document.getElementById('ha-'+key);
   if(el.style.display==='none'){el.style.display='block';arr.textContent='▲';}
   else{el.style.display='none';arr.textContent='▼';}
 }
 
 function renderHistorico(){
   var el=document.getElementById('hist-list');
-  if(!historico.length){el.innerHTML='<div class="empty" style="background:#fff;border-radius:12px;border:1px solid #e5e5e5;padding:2rem">Nenhum mês fechado ainda.<br><br><small style="color:#aaa">Use o botão Fechar Mês em Receitas ou Despesas para registrar.</small></div>';return;}
+  if(!historico.length){el.innerHTML='<div class="empty" style="background:#fff;border-radius:12px;border:1px solid #e5e5e5;padding:2rem">Nenhum mês fechado ainda.</div>';return;}
   var MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-
-  // Agrupar por mes+ano
   var grupos={};
   historico.forEach(function(h){
     var key=h.mes+'|'+h.ano;
-    if(!grupos[key]) grupos[key]={mes:h.mes,ano:h.ano,receitas:[],despesas:[]};
-    if(h.tipo==='receita') grupos[key].receitas.push(h);
+    if(!grupos[key])grupos[key]={mes:h.mes,ano:h.ano,receitas:[],despesas:[]};
+    if(h.tipo==='receita')grupos[key].receitas.push(h);
     else grupos[key].despesas.push(h);
   });
-
-  // Ordenar grupos do mais recente pro mais antigo
+  var porAno={};
+  historico.forEach(function(h){
+    var ano=h.ano||'—';
+    if(!porAno[ano])porAno[ano]={r:0,d:0};
+    if(h.tipo==='receita')porAno[ano].r+=h.total;
+    else porAno[ano].d+=h.total;
+  });
+  var anosOrd=Object.keys(porAno).sort(function(a,b){return parseInt(b)-parseInt(a);});
+  var anoHtml=anosOrd.map(function(ano){
+    var r=porAno[ano].r,d=porAno[ano].d,s=r-d;
+    return'<div style="background:#fff;border-radius:12px;border:2px solid #5b3fa5;margin-bottom:10px;overflow:hidden;"><div style="background:#5b3fa5;padding:12px 16px;"><span style="color:#fff;font-size:15px;font-weight:500;">📅 Total '+ano+'</span></div><div style="padding:14px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"><div><div style="font-size:10px;color:#888;text-transform:uppercase;margin-bottom:4px;">Receitas</div><div style="font-size:16px;font-weight:500;color:#185FA5;">'+fmt(r)+'</div></div><div><div style="font-size:10px;color:#888;text-transform:uppercase;margin-bottom:4px;">Despesas</div><div style="font-size:16px;font-weight:500;color:#a32d2d;">'+fmt(d)+'</div></div><div><div style="font-size:10px;color:#888;text-transform:uppercase;margin-bottom:4px;">Saldo</div><div style="font-size:16px;font-weight:500;color:'+(s>=0?'#2d7a2d':'#a32d2d')+';">'+fmt(s)+'</div></div></div></div>';
+  }).join('');
+  var divider='<div style="font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin:8px 0 8px;padding-left:2px;">Por mês</div>';
   var keys=Object.keys(grupos).sort(function(a,b){
-    var am=grupos[a], bm=grupos[b];
+    var am=grupos[a],bm=grupos[b];
     var ai=parseInt(am.ano)*12+MESES.indexOf(am.mes);
     var bi=parseInt(bm.ano)*12+MESES.indexOf(bm.mes);
     return bi-ai;
   });
-
-  // Totais por ano
-  var porAno={};
-  historico.forEach(function(h){ var ano=h.ano||'—'; if(!porAno[ano]) porAno[ano]={r:0,d:0}; if(h.tipo==='receita') porAno[ano].r+=h.total; else porAno[ano].d+=h.total; });
-  var anosOrd=Object.keys(porAno).sort(function(a,b){return parseInt(b)-parseInt(a);});
-  var anoHtml=anosOrd.map(function(ano){ var r=porAno[ano].r,d=porAno[ano].d,s=r-d; return '<div style="background:#fff;border-radius:12px;border:2px solid #5b3fa5;margin-bottom:10px;overflow:hidden;"><div style="background:#5b3fa5;padding:12px 16px;"><span style="color:#fff;font-size:15px;font-weight:500;">Total '+ano+'</span></div><div style="padding:14px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"><div><div style="font-size:10px;color:#888;text-transform:uppercase;margin-bottom:4px;">Receitas</div><div style="font-size:16px;font-weight:500;color:#185FA5;">'+fmt(r)+'</div></div><div><div style="font-size:10px;color:#888;text-transform:uppercase;margin-bottom:4px;">Despesas</div><div style="font-size:16px;font-weight:500;color:#a32d2d;">'+fmt(d)+'</div></div><div><div style="font-size:10px;color:#888;text-transform:uppercase;margin-bottom:4px;">Saldo</div><div style="font-size:16px;font-weight:500;color:'+(s>=0?'#2d7a2d':'#a32d2d')+';">'+fmt(s)+'</div></div></div></div>'; }).join('');
-  var divHtml='<div style="font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin:16px 0 8px;">Por mês</div>';
-  el.innerHTML=anoHtml+divHtml;
-  el.innerHTML+=keys.map(function(key){
+  var mesesHtml=keys.map(function(key){
     var g=grupos[key];
     var safeKey=key.replace('|','-');
-
     var totalR=g.receitas.reduce(function(a,h){return a+h.total;},0);
     var totalD=g.despesas.reduce(function(a,h){return a+h.total;},0);
     var saldo=totalR-totalD;
-
-    // Detalhe receitas
     var recHtml='';
     if(g.receitas.length){
-      recHtml+='<div style="font-size:11px;font-weight:500;color:#185FA5;text-transform:uppercase;letter-spacing:0.05em;margin:12px 0 6px;">📈 Receitas</div>';
+      recHtml+='<div style="font-size:11px;font-weight:500;color:#185FA5;text-transform:uppercase;margin:12px 0 6px;">📈 Receitas</div>';
       g.receitas.forEach(function(h){
         recHtml+='<div style="background:#f0f6ff;border-radius:8px;padding:8px 12px;margin-bottom:6px;">';
-        (h.itens||[]).forEach(function(i){
-          recHtml+='<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid #dce8f8;"><span>'+i.desc+'<span class="badge badge-'+i.date+'" style="margin-left:5px">dia '+i.date+'</span></span><span style="font-weight:500;color:#185FA5">'+fmt(i.valor)+'</span></div>';
-        });
-        recHtml+='<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#185FA5;padding-top:6px;"><span>Total receitas</span><span>'+fmt(h.total)+'</span></div>';
-        recHtml+='<button class="hist-del" onclick="removeHistorico(\''+h.id+'\')" style="margin-top:6px;">Remover</button>';
-        recHtml+='</div>';
+        (h.itens||[]).forEach(function(i){recHtml+='<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid #dce8f8;"><span>'+i.desc+'</span><span style="font-weight:500;color:#185FA5">'+fmt(i.valor)+'</span></div>';});
+        recHtml+='<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#185FA5;padding-top:6px;"><span>Total</span><span>'+fmt(h.total)+'</span></div>';
+        recHtml+='<button class="hist-del" onclick="removeHistorico(\''+h.id+'\')">Remover</button></div>';
       });
     }
-
-    // Detalhe despesas
     var despHtml='';
     if(g.despesas.length){
-      despHtml+='<div style="font-size:11px;font-weight:500;color:#a32d2d;text-transform:uppercase;letter-spacing:0.05em;margin:12px 0 6px;">📉 Despesas</div>';
+      despHtml+='<div style="font-size:11px;font-weight:500;color:#a32d2d;text-transform:uppercase;margin:12px 0 6px;">📉 Despesas</div>';
       g.despesas.forEach(function(h){
         despHtml+='<div style="background:#fff5f5;border-radius:8px;padding:8px 12px;margin-bottom:6px;">';
         (h.itens||[]).forEach(function(i){
-          despHtml+='<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid #f5dada;"><span>'+i.desc+'<span class="badge badge-'+i.date+'" style="margin-left:5px">dia '+i.date+'</span></span><span style="font-weight:500;color:#a32d2d">'+fmt(i.valor)+'</span></div>';
+          var catEmoji=i.cat?(CATS_EMOJI[i.cat]||'📦')+' ':'';
+          despHtml+='<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid #f5dada;"><span>'+i.desc+(i.cat?'<span style="font-size:10px;color:#a32d2d;margin-left:5px;">'+catEmoji+i.cat+'</span>':'')+'</span><span style="font-weight:500;color:#a32d2d">'+fmt(i.valor)+'</span></div>';
         });
-        despHtml+='<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#a32d2d;padding-top:6px;"><span>Total despesas</span><span>'+fmt(h.total)+'</span></div>';
-        despHtml+='<button class="hist-del" onclick="removeHistorico(\''+h.id+'\')" style="margin-top:6px;">Remover</button>';
-        despHtml+='</div>';
+        despHtml+='<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#a32d2d;padding-top:6px;"><span>Total</span><span>'+fmt(h.total)+'</span></div>';
+        despHtml+='<button class="hist-del" onclick="removeHistorico(\''+h.id+'\')">Remover</button></div>';
       });
     }
-
-    return '<div style="background:#fff;border-radius:12px;border:1px solid #e5e5e5;margin-bottom:10px;overflow:hidden;">'
-
-      // Header clicável
+    return'<div style="background:#fff;border-radius:12px;border:1px solid #e5e5e5;margin-bottom:10px;overflow:hidden;">'
       +'<div onclick="toggleMes(\''+safeKey+'\')" style="background:#1a1a1a;padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">'
         +'<span style="color:#fff;font-size:15px;font-weight:500;">'+g.mes+' '+g.ano+'</span>'
-        +'<span id="hist-arrow-'+safeKey+'" style="color:#fff;font-size:12px;">▼</span>'
+        +'<span id="ha-'+safeKey+'" style="color:#fff;font-size:12px;">▼</span>'
       +'</div>'
-
-      // Resumo sempre visível
       +'<div style="padding:12px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;border-bottom:1px solid #f0f0f0;">'
-        +'<div><div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Receitas</div><div style="font-size:14px;font-weight:500;color:#185FA5;">'+fmt(totalR)+'</div></div>'
-        +'<div><div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Despesas</div><div style="font-size:14px;font-weight:500;color:#a32d2d;">'+fmt(totalD)+'</div></div>'
-        +'<div><div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Saldo</div><div style="font-size:14px;font-weight:500;color:'+(saldo>=0?'#2d7a2d':'#a32d2d')+';">'+fmt(saldo)+'</div></div>'
+        +'<div><div style="font-size:10px;color:#888;text-transform:uppercase;margin-bottom:2px;">Receitas</div><div style="font-size:14px;font-weight:500;color:#185FA5;">'+fmt(totalR)+'</div></div>'
+        +'<div><div style="font-size:10px;color:#888;text-transform:uppercase;margin-bottom:2px;">Despesas</div><div style="font-size:14px;font-weight:500;color:#a32d2d;">'+fmt(totalD)+'</div></div>'
+        +'<div><div style="font-size:10px;color:#888;text-transform:uppercase;margin-bottom:2px;">Saldo</div><div style="font-size:14px;font-weight:500;color:'+(saldo>=0?'#2d7a2d':'#a32d2d')+';">'+fmt(saldo)+'</div></div>'
       +'</div>'
-
-      // Detalhe colapsável
-      +'<div id="hist-body-'+safeKey+'" style="display:none;padding:0 16px 14px;">'
-        +recHtml+despHtml
-      +'</div>'
-
+      +'<div id="hb-'+safeKey+'" style="display:none;padding:0 16px 14px;">'+recHtml+despHtml+'</div>'
     +'</div>';
   }).join('');
-}
-
-function toggleMetaEdit(){
-  var edit=document.getElementById('meta-edit');
-  var view=document.getElementById('meta-view');
-  var btn=document.getElementById('meta-edit-btn');
-  var isEditing=edit.style.display!=='none';
-  if(isEditing){
-    // Cancela edição, volta pra leitura
-    edit.style.display='none';
-    view.style.display='block';
-    btn.textContent='✏️ Editar';
-  } else {
-    edit.style.display='block';
-    view.style.display='none';
-    btn.textContent='✕ Cancelar';
-  }
-}
-
-function confirmarMeta(){
-  var meta=parseFloat(document.getElementById('r-meta').value)||0;
-  var taxaExtra=parseFloat(document.getElementById('r-taxa-extra').value)||0;
-  db.collection('config').doc('meta').set({meta:meta,taxaExtra:taxaExtra})
-  .then(function(){
-    setSynced(true);
-    // Volta para modo leitura
-    document.getElementById('meta-edit').style.display='none';
-    document.getElementById('meta-view').style.display='block';
-    document.getElementById('meta-edit-btn').textContent='✏️ Editar';
-    atualizarViewMeta(meta,taxaExtra);
-    updateMeta();
-  }).catch(function(){setSynced(false);alert('Erro ao salvar meta.');});
-}
-
-function atualizarViewMeta(meta,taxaExtra){
-  document.getElementById('meta-view-val').textContent=meta?fmt(meta):'—';
-  document.getElementById('meta-view-taxa').textContent=taxaExtra?'R$'+taxaExtra.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h':'—';
-}
-
-var saveMetaTimer=null;
-function saveMeta(){
-  updateMeta();
-  clearTimeout(saveMetaTimer);
-  saveMetaTimer=setTimeout(function(){
-    var meta=parseFloat(document.getElementById('r-meta').value)||0;
-    var taxaExtra=parseFloat(document.getElementById('r-taxa-extra').value)||0;
-    db.collection('config').doc('meta').set({meta:meta,taxaExtra:taxaExtra})
-    .then(function(){setSynced(true);}).catch(function(){setSynced(false);});
-  },800);
-}
-
-function updateMeta(){
-  var meta=parseFloat(document.getElementById('r-meta').value)||0;
-  var taxaExtra=parseFloat(document.getElementById('r-taxa-extra').value)||0;
-  var total=getTotalR();
-  var dr=document.getElementById('r-delta-row');
-  if(!meta){dr.style.display='none';return;}
-  dr.style.display='block';
-  var delta=meta-total,atingiu=delta<=0;
-  var pct=Math.min(100,(total/meta*100));
-  document.getElementById('r-val-meta').textContent=fmt(meta);
-  document.getElementById('r-box-delta').className='delta-box '+(atingiu?'pos':'neg');
-  document.getElementById('r-val-delta').textContent=fmt(Math.abs(delta));
-  document.getElementById('r-sub-delta').textContent=atingiu?'acima da meta':'faltando';
-  document.getElementById('r-pct-label').textContent=pct.toFixed(1)+'%';
-  document.getElementById('r-pct-bar').style.width=pct.toFixed(1)+'%';
-  document.getElementById('r-pct-bar').style.background=atingiu?'#2d7a2d':(pct>=75?'#BA7517':'#185FA5');
-  var bx=document.getElementById('r-box-extra');
-  if(!atingiu&&taxaExtra>0){bx.className='delta-box neg';document.getElementById('r-val-extra').textContent=(delta/taxaExtra).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'h';document.getElementById('r-sub-extra').textContent='a R$'+taxaExtra.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h';}
-  else if(atingiu){bx.className='delta-box pos';document.getElementById('r-val-extra').textContent='Meta atingida';document.getElementById('r-sub-extra').textContent='';}
-  else{bx.className='delta-box neutral';document.getElementById('r-val-extra').textContent='—';document.getElementById('r-sub-extra').textContent='informe taxa extra';}
+  el.innerHTML=anoHtml+divider+mesesHtml;
 }
 
 function renderHome(){
@@ -686,52 +583,59 @@ function renderHome(){
       var x1=cx+r*Math.sin(a),y1=cy-r*Math.cos(a),x2=cx+r*Math.sin(b),y2=cy-r*Math.cos(b);
       return'<path d="M'+cx+','+cy+' L'+x1+','+y1+' A'+r+','+r+' 0 '+(pct>0.5?1:0)+',1 '+x2+','+y2+' Z" fill="'+color+'"/>';
     }
-    pizzaHtml='<div class="chart-wrap"><div class="chart-title">Receitas vs Despesas</div><div style="display:flex;align-items:center;gap:16px"><svg viewBox="0 0 200 200" style="width:130px;height:130px;flex-shrink:0">'+slice(0,totalR,'#185FA5')+slice(totalR/total2,totalD,'#a32d2d')+'<circle cx="'+cx+'" cy="'+cy+'" r="40" fill="#fff"/></svg><div style="flex:1;display:flex;flex-direction:column;gap:12px"><div><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><div style="width:10px;height:10px;border-radius:2px;background:#185FA5"></div><span style="font-size:11px;color:#888">Receitas</span></div><div style="font-size:14px;font-weight:500">'+fmt(totalR)+'</div><div style="font-size:11px;color:#888">'+(totalR/total2*100).toFixed(1)+'%</div></div><div><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><div style="width:10px;height:10px;border-radius:2px;background:#a32d2d"></div><span style="font-size:11px;color:#888">Despesas</span></div><div style="font-size:14px;font-weight:500;color:#a32d2d">'+fmt(totalD)+'</div><div style="font-size:11px;color:#888">'+(totalD/total2*100).toFixed(1)+'%</div></div></div></div></div>';
+    pizzaHtml='<div class="chart-wrap"><div class="chart-title">Receitas vs Despesas</div>'
+      +'<div style="display:flex;align-items:center;gap:16px">'
+        +'<svg viewBox="0 0 200 200" style="width:130px;height:130px;flex-shrink:0">'+slice(0,totalR,'#185FA5')+slice(totalR/total2,totalD,'#a32d2d')+'<circle cx="'+cx+'" cy="'+cy+'" r="40" fill="#fff"/></svg>'
+        +'<div style="flex:1;display:flex;flex-direction:column;gap:12px">'
+          +'<div><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><div style="width:10px;height:10px;border-radius:2px;background:#185FA5"></div><span style="font-size:11px;color:#888">Receitas</span></div><div style="font-size:14px;font-weight:500">'+fmt(totalR)+'</div><div style="font-size:11px;color:#888">'+(totalR/total2*100).toFixed(1)+'%</div></div>'
+          +'<div><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><div style="width:10px;height:10px;border-radius:2px;background:#a32d2d"></div><span style="font-size:11px;color:#888">Despesas</span></div><div style="font-size:14px;font-weight:500;color:#a32d2d">'+fmt(totalD)+'</div><div style="font-size:11px;color:#888">'+(totalD/total2*100).toFixed(1)+'%</div></div>'
+        +'</div>'
+      +'</div></div>';
   }
   document.getElementById('home-summary').innerHTML=
-    '<div class="summary-grid"><div class="summary-card"><div class="s-label">Receitas</div><div class="s-val blue">'+fmt(totalR)+'</div><div class="s-sub">'+receitas.length+' projeto'+(receitas.length!==1?'s':'')+'</div></div><div class="summary-card"><div class="s-label">Despesas</div><div class="s-val red">'+fmt(totalD)+'</div><div class="s-sub">'+despesas.length+' item'+(despesas.length!==1?'s':'')+'</div></div><div class="summary-card full"><div class="s-label">Saldo</div><div class="s-val '+(saldo>=0?'green':'red')+'">'+fmt(saldo)+'</div><div class="prog-wrap"><div class="prog-label"><span>Despesas vs receita</span><span>'+pctD.toFixed(1)+'%</span></div><div class="prog-bg"><div class="prog-fill" style="width:'+pctD.toFixed(1)+'%;background:'+(pctD>80?'#a32d2d':pctD>50?'#BA7517':'#2d7a2d')+'"></div></div></div></div></div>'+
-    pizzaHtml+
-    '<div class="day-split"><div class="day-card"><div class="day-header day-header-16"><span>Dia 16</span><span>'+fmt(r16-d16)+'</span></div><div class="day-body"><div class="day-row"><span class="day-row-label">Receita</span><span class="day-row-val">'+fmt(r16)+'</span></div><div class="day-row"><span class="day-row-label">Despesa</span><span class="day-row-val red">'+fmt(d16)+'</span></div><div class="day-row"><span class="day-row-label">Saldo</span><span class="day-row-val '+((r16-d16)>=0?'green':'red')+'">'+fmt(r16-d16)+'</span></div></div></div><div class="day-card"><div class="day-header day-header-25"><span>Dia 25</span><span>'+fmt(r25-d25)+'</span></div><div class="day-body"><div class="day-row"><span class="day-row-label">Receita</span><span class="day-row-val">'+fmt(r25)+'</span></div><div class="day-row"><span class="day-row-label">Despesa</span><span class="day-row-val red">'+fmt(d25)+'</span></div><div class="day-row"><span class="day-row-label">Saldo</span><span class="day-row-val '+((r25-d25)>=0?'green':'red')+'">'+fmt(r25-d25)+'</span></div></div></div></div>';
+    '<div class="sgrid">'
+      +'<div class="card"><div class="slabel">Receitas</div><div class="sval b">'+fmt(totalR)+'</div><div class="ssub">'+receitas.length+' projeto'+(receitas.length!==1?'s':'')+'</div></div>'
+      +'<div class="card"><div class="slabel">Despesas</div><div class="sval r">'+fmt(totalD)+'</div><div class="ssub">'+despesas.length+' item'+(despesas.length!==1?'s':'')+'</div></div>'
+      +'<div class="card full"><div class="slabel">Saldo</div><div class="sval '+(saldo>=0?'g':'r')+'">'+fmt(saldo)+'</div>'
+        +'<div class="prog-wrap"><div class="prog-label"><span>Despesas vs receita</span><span>'+pctD.toFixed(1)+'%</span></div>'
+        +'<div class="prog-bg"><div class="prog-fill" style="width:'+pctD.toFixed(1)+'%;background:'+(pctD>80?'#a32d2d':pctD>50?'#BA7517':'#2d7a2d')+'"></div></div></div>'
+      +'</div>'
+    +'</div>'
+    +pizzaHtml
+    +'<div class="day-split">'
+      +'<div class="day-card"><div class="day-hdr day-hdr-16"><span>Dia 16</span><span>'+fmt(r16-d16)+'</span></div><div class="day-body">'
+        +'<div class="day-row"><span class="day-rl">Receita</span><span class="day-rv">'+fmt(r16)+'</span></div>'
+        +'<div class="day-row"><span class="day-rl">Despesa</span><span class="day-rv r">'+fmt(d16)+'</span></div>'
+        +'<div class="day-row"><span class="day-rl">Saldo</span><span class="day-rv '+((r16-d16)>=0?'g':'r')+'">'+fmt(r16-d16)+'</span></div>'
+      +'</div></div>'
+      +'<div class="day-card"><div class="day-hdr day-hdr-25"><span>Dia 25</span><span>'+fmt(r25-d25)+'</span></div><div class="day-body">'
+        +'<div class="day-row"><span class="day-rl">Receita</span><span class="day-rv">'+fmt(r25)+'</span></div>'
+        +'<div class="day-row"><span class="day-rl">Despesa</span><span class="day-rv r">'+fmt(d25)+'</span></div>'
+        +'<div class="day-row"><span class="day-rl">Saldo</span><span class="day-rv '+((r25-d25)>=0?'g':'r')+'">'+fmt(r25-d25)+'</span></div>'
+      +'</div></div>'
+    +'</div>';
+  updateMeta();
 }
 
-// Listeners tempo real
+// Listeners Firebase
+db.collection('config').doc('meta').onSnapshot(function(doc){
+  if(doc.exists){
+    var d=doc.data();
+    if(d.meta) document.getElementById('r-meta').value=d.meta;
+    if(d.taxaExtra) document.getElementById('r-taxa-extra').value=d.taxaExtra;
+    updateMeta();
+  }
+},function(){});
+
 db.collection('receitas').orderBy('criadoEm','asc').onSnapshot(function(snap){
   receitas=snap.docs.map(function(d){var data=d.data();data.id=d.id;return data;});
-  renderReceitas(); renderHome(); setSynced(true);
+  renderReceitas();renderHome();setSynced(true);
 },function(){setSynced(false);});
 
 db.collection('despesas').orderBy('criadoEm','asc').onSnapshot(function(snap){
   despesas=snap.docs.map(function(d){var data=d.data();data.id=d.id;return data;});
-  renderDespesas(); renderHome(); setSynced(true);
+  renderDespesas();renderHome();setSynced(true);
 },function(){setSynced(false);});
-
-db.collection('config').doc('meta').onSnapshot(function(doc){
-  if(doc.exists){
-    var d=doc.data();
-    var meta=d.meta||0;
-    var taxaExtra=d.taxaExtra||0;
-    if(meta) document.getElementById('r-meta').value=meta;
-    if(taxaExtra) document.getElementById('r-taxa-extra').value=taxaExtra;
-    // Mostrar modo leitura se já tem meta salva
-    if(meta){
-      document.getElementById('meta-view').style.display='block';
-      document.getElementById('meta-edit').style.display='none';
-      document.getElementById('meta-edit-btn').textContent='✏️ Editar';
-      atualizarViewMeta(meta,taxaExtra);
-    } else {
-      // Sem meta ainda: abrir modo edição direto
-      document.getElementById('meta-view').style.display='none';
-      document.getElementById('meta-edit').style.display='block';
-      document.getElementById('meta-edit-btn').textContent='✕ Cancelar';
-    }
-    updateMeta();
-  } else {
-    // Nenhuma meta no Firebase: mostrar edição
-    document.getElementById('meta-view').style.display='none';
-    document.getElementById('meta-edit').style.display='block';
-    document.getElementById('meta-edit-btn').textContent='✕ Cancelar';
-  }
-},function(){});
 
 db.collection('historico').orderBy('criadoEm','asc').onSnapshot(function(snap){
   historico=snap.docs.map(function(d){var data=d.data();data.id=d.id;return data;});
