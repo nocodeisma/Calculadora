@@ -182,13 +182,23 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
   <div id="r-meta-section" class="goal-card hidden">
     <div class="form-title">Meta e hora extra</div>
     <div class="grid2">
-      <div><label>Meta (R$)</label><input type="number" id="r-meta" placeholder="40000" min="0" step="100" oninput="updateMeta()"/></div>
-      <div><label>Taxa hora extra (R$)</label><input type="number" id="r-taxa-extra" placeholder="160" min="0" step="0.01" oninput="updateMeta()"/></div>
+      <div><label>Meta (R$)</label><input type="number" id="r-meta" placeholder="40000" min="0" step="100" oninput="saveMeta()"/></div>
+      <div><label>Taxa hora extra (R$)</label><input type="number" id="r-taxa-extra" placeholder="160" min="0" step="0.01" oninput="saveMeta()"/></div>
     </div>
-    <div class="delta-row" id="r-delta-row" style="display:none">
-      <div class="delta-box neutral"><div class="delta-label">Meta</div><div class="delta-val" id="r-val-meta">—</div></div>
-      <div class="delta-box neutral" id="r-box-delta"><div class="delta-label">Delta</div><div class="delta-val" id="r-val-delta">—</div><div class="delta-sub" id="r-sub-delta">—</div></div>
-      <div class="delta-box neutral" id="r-box-extra"><div class="delta-label">Horas extras</div><div class="delta-val" id="r-val-extra">—</div><div class="delta-sub" id="r-sub-extra">—</div></div>
+    <div id="r-delta-row" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div class="delta-box neutral"><div class="delta-label">Meta</div><div class="delta-val" id="r-val-meta">—</div></div>
+        <div class="delta-box neutral" id="r-box-delta"><div class="delta-label">Delta</div><div class="delta-val" id="r-val-delta">—</div><div class="delta-sub" id="r-sub-delta">—</div></div>
+        <div class="delta-box neutral" id="r-box-extra"><div class="delta-label">Horas extras</div><div class="delta-val" id="r-val-extra">—</div><div class="delta-sub" id="r-sub-extra">—</div></div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:4px;">
+          <span>Progresso da meta</span><span id="r-pct-label">0%</span>
+        </div>
+        <div style="height:10px;background:#f0f0ee;border-radius:99px;overflow:hidden;">
+          <div id="r-pct-bar" style="height:100%;border-radius:99px;transition:width 0.4s;width:0%;background:#2d7a2d;"></div>
+        </div>
+      </div>
     </div>
     <button class="btn-fechar" onclick="abrirModal('receita')">📋 Fechar mês — Receitas</button>
   </div>
@@ -495,18 +505,34 @@ function renderHistorico(){
   }).join('');
 }
 
+var saveMetaTimer=null;
+function saveMeta(){
+  updateMeta();
+  clearTimeout(saveMetaTimer);
+  saveMetaTimer=setTimeout(function(){
+    var meta=parseFloat(document.getElementById('r-meta').value)||0;
+    var taxaExtra=parseFloat(document.getElementById('r-taxa-extra').value)||0;
+    db.collection('config').doc('meta').set({meta:meta,taxaExtra:taxaExtra})
+    .then(function(){setSynced(true);}).catch(function(){setSynced(false);});
+  },800);
+}
+
 function updateMeta(){
   var meta=parseFloat(document.getElementById('r-meta').value)||0;
   var taxaExtra=parseFloat(document.getElementById('r-taxa-extra').value)||0;
   var total=getTotalR();
   var dr=document.getElementById('r-delta-row');
   if(!meta){dr.style.display='none';return;}
-  dr.style.display='grid';
+  dr.style.display='block';
   var delta=meta-total,atingiu=delta<=0;
+  var pct=Math.min(100,(total/meta*100));
   document.getElementById('r-val-meta').textContent=fmt(meta);
   document.getElementById('r-box-delta').className='delta-box '+(atingiu?'pos':'neg');
   document.getElementById('r-val-delta').textContent=fmt(Math.abs(delta));
   document.getElementById('r-sub-delta').textContent=atingiu?'acima da meta':'faltando';
+  document.getElementById('r-pct-label').textContent=pct.toFixed(1)+'%';
+  document.getElementById('r-pct-bar').style.width=pct.toFixed(1)+'%';
+  document.getElementById('r-pct-bar').style.background=atingiu?'#2d7a2d':(pct>=75?'#BA7517':'#185FA5');
   var bx=document.getElementById('r-box-extra');
   if(!atingiu&&taxaExtra>0){bx.className='delta-box neg';document.getElementById('r-val-extra').textContent=(delta/taxaExtra).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'h';document.getElementById('r-sub-extra').textContent='a R$'+taxaExtra.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h';}
   else if(atingiu){bx.className='delta-box pos';document.getElementById('r-val-extra').textContent='Meta atingida';document.getElementById('r-sub-extra').textContent='';}
@@ -551,6 +577,15 @@ db.collection('despesas').orderBy('criadoEm','asc').onSnapshot(function(snap){
   despesas=snap.docs.map(function(d){var data=d.data();data.id=d.id;return data;});
   renderDespesas(); renderHome(); setSynced(true);
 },function(){setSynced(false);});
+
+db.collection('config').doc('meta').onSnapshot(function(doc){
+  if(doc.exists){
+    var d=doc.data();
+    if(d.meta) document.getElementById('r-meta').value=d.meta;
+    if(d.taxaExtra) document.getElementById('r-taxa-extra').value=d.taxaExtra;
+    updateMeta();
+  }
+},function(){});
 
 db.collection('historico').orderBy('criadoEm','asc').onSnapshot(function(snap){
   historico=snap.docs.map(function(d){var data=d.data();data.id=d.id;return data;});
