@@ -147,6 +147,52 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
       <div style="font-size:15px;font-weight:500;">Histórico</div>
     </div>
   </button>
+  <div id="home-meta-card" class="goal-card" style="margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="form-title" style="margin:0;">Meta do mês</div>
+      <button id="meta-edit-btn" onclick="toggleMetaEdit()" style="background:none;border:1px solid #ddd;border-radius:6px;padding:4px 12px;font-size:12px;color:#666;cursor:pointer;font-family:inherit;">✏️ Editar</button>
+    </div>
+
+    <!-- Modo leitura -->
+    <div id="meta-view" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div style="background:#f5f5f3;border-radius:8px;padding:10px 14px;">
+          <div style="font-size:11px;color:#888;margin-bottom:2px;">Meta</div>
+          <div style="font-size:16px;font-weight:500;" id="meta-view-val">—</div>
+        </div>
+        <div style="background:#f5f5f3;border-radius:8px;padding:10px 14px;">
+          <div style="font-size:11px;color:#888;margin-bottom:2px;">Taxa hora extra</div>
+          <div style="font-size:16px;font-weight:500;" id="meta-view-taxa">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modo edição -->
+    <div id="meta-edit" style="display:none">
+      <div class="grid2" style="margin-bottom:10px;">
+        <div><label>Meta (R$)</label><input type="number" id="r-meta" placeholder="40000" min="0" step="100"/></div>
+        <div><label>Taxa hora extra (R$)</label><input type="number" id="r-taxa-extra" placeholder="160" min="0" step="0.01"/></div>
+      </div>
+      <button onclick="confirmarMeta()" style="width:100%;padding:9px;background:#185FA5;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">Salvar meta</button>
+    </div>
+
+    <!-- Resultados -->
+    <div id="r-delta-row" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div class="delta-box neutral"><div class="delta-label">Meta</div><div class="delta-val" id="r-val-meta">—</div></div>
+        <div class="delta-box neutral" id="r-box-delta"><div class="delta-label">Delta</div><div class="delta-val" id="r-val-delta">—</div><div class="delta-sub" id="r-sub-delta">—</div></div>
+        <div class="delta-box neutral" id="r-box-extra"><div class="delta-label">Horas extras</div><div class="delta-val" id="r-val-extra">—</div><div class="delta-sub" id="r-sub-extra">—</div></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:4px;">
+          <span>Progresso da meta</span><span id="r-pct-label">0%</span>
+        </div>
+        <div style="height:10px;background:#f0f0ee;border-radius:99px;overflow:hidden;">
+          <div id="r-pct-bar" style="height:100%;border-radius:99px;transition:width 0.4s;width:0%;background:#2d7a2d;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
   <div id="home-summary"><div class="loading">Conectando...</div></div>
 </div>
 
@@ -179,27 +225,7 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
     <button class="btn-add receita" id="r-btn-add" onclick="addReceita()">+ Adicionar receita</button>
   </div>
   <div id="r-list"><div class="loading">Carregando...</div></div>
-  <div id="r-meta-section" class="goal-card hidden">
-    <div class="form-title">Meta e hora extra</div>
-    <div class="grid2">
-      <div><label>Meta (R$)</label><input type="number" id="r-meta" placeholder="40000" min="0" step="100" oninput="saveMeta()"/></div>
-      <div><label>Taxa hora extra (R$)</label><input type="number" id="r-taxa-extra" placeholder="160" min="0" step="0.01" oninput="saveMeta()"/></div>
-    </div>
-    <div id="r-delta-row" style="display:none">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
-        <div class="delta-box neutral"><div class="delta-label">Meta</div><div class="delta-val" id="r-val-meta">—</div></div>
-        <div class="delta-box neutral" id="r-box-delta"><div class="delta-label">Delta</div><div class="delta-val" id="r-val-delta">—</div><div class="delta-sub" id="r-sub-delta">—</div></div>
-        <div class="delta-box neutral" id="r-box-extra"><div class="delta-label">Horas extras</div><div class="delta-val" id="r-val-extra">—</div><div class="delta-sub" id="r-sub-extra">—</div></div>
-      </div>
-      <div style="margin-bottom:10px;">
-        <div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:4px;">
-          <span>Progresso da meta</span><span id="r-pct-label">0%</span>
-        </div>
-        <div style="height:10px;background:#f0f0ee;border-radius:99px;overflow:hidden;">
-          <div id="r-pct-bar" style="height:100%;border-radius:99px;transition:width 0.4s;width:0%;background:#2d7a2d;"></div>
-        </div>
-      </div>
-    </div>
+  <div style="margin-top:4px;padding:0 0 1rem">
     <button class="btn-fechar" onclick="abrirModal('receita')">📋 Fechar mês — Receitas</button>
   </div>
 </div>
@@ -375,9 +401,7 @@ function confirmarFechamento(){
 
 function renderReceitas(){
   var el=document.getElementById('r-list');
-  var meta=document.getElementById('r-meta-section');
-  if(!receitas.length){el.innerHTML='<div class="empty">Nenhuma receita adicionada.</div>';meta.classList.add('hidden');return;}
-  meta.classList.remove('hidden');
+  if(!receitas.length){el.innerHTML='<div class="empty">Nenhuma receita adicionada.</div>';updateMeta();return;}
   el.innerHTML=receitas.map(function(p){
     var th=(p.horas*p.dias).toLocaleString('pt-BR',{maximumFractionDigits:1});
     var periodo=p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
@@ -505,6 +529,43 @@ function renderHistorico(){
   }).join('');
 }
 
+function toggleMetaEdit(){
+  var edit=document.getElementById('meta-edit');
+  var view=document.getElementById('meta-view');
+  var btn=document.getElementById('meta-edit-btn');
+  var isEditing=edit.style.display!=='none';
+  if(isEditing){
+    // Cancela edição, volta pra leitura
+    edit.style.display='none';
+    view.style.display='block';
+    btn.textContent='✏️ Editar';
+  } else {
+    edit.style.display='block';
+    view.style.display='none';
+    btn.textContent='✕ Cancelar';
+  }
+}
+
+function confirmarMeta(){
+  var meta=parseFloat(document.getElementById('r-meta').value)||0;
+  var taxaExtra=parseFloat(document.getElementById('r-taxa-extra').value)||0;
+  db.collection('config').doc('meta').set({meta:meta,taxaExtra:taxaExtra})
+  .then(function(){
+    setSynced(true);
+    // Volta para modo leitura
+    document.getElementById('meta-edit').style.display='none';
+    document.getElementById('meta-view').style.display='block';
+    document.getElementById('meta-edit-btn').textContent='✏️ Editar';
+    atualizarViewMeta(meta,taxaExtra);
+    updateMeta();
+  }).catch(function(){setSynced(false);alert('Erro ao salvar meta.');});
+}
+
+function atualizarViewMeta(meta,taxaExtra){
+  document.getElementById('meta-view-val').textContent=meta?fmt(meta):'—';
+  document.getElementById('meta-view-taxa').textContent=taxaExtra?'R$'+taxaExtra.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h':'—';
+}
+
 var saveMetaTimer=null;
 function saveMeta(){
   updateMeta();
@@ -581,9 +642,28 @@ db.collection('despesas').orderBy('criadoEm','asc').onSnapshot(function(snap){
 db.collection('config').doc('meta').onSnapshot(function(doc){
   if(doc.exists){
     var d=doc.data();
-    if(d.meta) document.getElementById('r-meta').value=d.meta;
-    if(d.taxaExtra) document.getElementById('r-taxa-extra').value=d.taxaExtra;
+    var meta=d.meta||0;
+    var taxaExtra=d.taxaExtra||0;
+    if(meta) document.getElementById('r-meta').value=meta;
+    if(taxaExtra) document.getElementById('r-taxa-extra').value=taxaExtra;
+    // Mostrar modo leitura se já tem meta salva
+    if(meta){
+      document.getElementById('meta-view').style.display='block';
+      document.getElementById('meta-edit').style.display='none';
+      document.getElementById('meta-edit-btn').textContent='✏️ Editar';
+      atualizarViewMeta(meta,taxaExtra);
+    } else {
+      // Sem meta ainda: abrir modo edição direto
+      document.getElementById('meta-view').style.display='none';
+      document.getElementById('meta-edit').style.display='block';
+      document.getElementById('meta-edit-btn').textContent='✕ Cancelar';
+    }
     updateMeta();
+  } else {
+    // Nenhuma meta no Firebase: mostrar edição
+    document.getElementById('meta-view').style.display='none';
+    document.getElementById('meta-edit').style.display='block';
+    document.getElementById('meta-edit-btn').textContent='✕ Cancelar';
   }
 },function(){});
 
