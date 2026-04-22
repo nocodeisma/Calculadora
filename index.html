@@ -7,8 +7,8 @@
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Finanças</title>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f0ee;color:#1a1a1a;min-height:100vh;}
@@ -315,11 +315,6 @@ var firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
-// Cache offline: carrega dados do cache instantaneamente enquanto sincroniza
-db.settings({cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED});
-db.enablePersistence({synchronizeTabs:true}).catch(function(err){
-  console.log('Persistence:', err.code);
-});
 
 var receitas=[], despesas=[], historico=[], rDate=16, dDate=16, modalTipo='', viewMode='dia';
 
