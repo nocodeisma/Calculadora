@@ -992,10 +992,14 @@ function toggleAllMeses(){
 
 // WhatsApp via CallMeBot
 function enviarWhatsApp(msg){
-  var phone='554999885727';
-  var apikey='1542451';
-  var url='https://api.callmebot.com/whatsapp.php?phone='+phone+'&apikey='+apikey+'&text='+encodeURIComponent(msg);
-  fetch(url).catch(function(){});
+  var contatos=[
+    {phone:'554999885727',apikey:'1542451'},
+    {phone:'554991504262',apikey:'4947536'}
+  ];
+  contatos.forEach(function(c){
+    var url='https://api.callmebot.com/whatsapp.php?phone='+c.phone+'&apikey='+c.apikey+'&text='+encodeURIComponent(msg);
+    fetch(url).catch(function(){});
+  });
 }
 
 // Firebase listeners
