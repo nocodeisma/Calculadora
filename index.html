@@ -317,13 +317,14 @@ function toggleCat(key){
   if(arr){arr.textContent=window.catOpen[key]?'▲':'▼';}
 }
 
-// Event delegation para categorias
+// Event delegation
 document.addEventListener('click',function(e){
   var hdr=e.target.closest('[data-catkey]');
-  if(hdr){
-    var key=hdr.getAttribute('data-catkey');
-    if(key) toggleCat(key);
-  }
+  if(hdr){var key=hdr.getAttribute('data-catkey');if(key)toggleCat(key);}
+  var rdel=e.target.closest('[data-rid]');
+  if(rdel){var rid=rdel.getAttribute('data-rid');if(rid)removeReceita(rid);}
+  var ddel=e.target.closest('[data-did]');
+  if(ddel){var did=ddel.getAttribute('data-did');if(did)removeDespesa(did);}
 });
 
 function goTo(page){
@@ -479,11 +480,59 @@ function confirmarFechamento(){
 function renderReceitas(){
   var el=document.getElementById('r-list');
   if(!receitas.length){el.innerHTML='<div class="empty">Nenhuma receita adicionada.</div>';updateMeta();return;}
-  el.innerHTML=receitas.map(function(p){
+
+  var MLIST=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var grupos={}, ordemGrupos=[];
+  receitas.forEach(function(p){
+    var k=(p.mes||'Sem mês')+'|'+(p.ano||'');
+    if(!grupos[k]){grupos[k]={mes:p.mes||'Sem mês',ano:p.ano||'',d16:[],d25:[]};ordemGrupos.push(k);}
+    if(p.date===25) grupos[k].d25.push(p);
+    else grupos[k].d16.push(p);
+  });
+  ordemGrupos.sort(function(a,b){
+    var ga=grupos[a],gb=grupos[b];
+    var ai=parseInt(ga.ano||0)*12+MLIST.indexOf(ga.mes);
+    var bi=parseInt(gb.ano||0)*12+MLIST.indexOf(gb.mes);
+    return ai-bi;
+  });
+
+  function itemHtml(p){
     var th=(p.horas*p.dias).toLocaleString('pt-BR',{maximumFractionDigits:1});
-    var periodo=p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
-    return'<div class="litem"><div style="flex:1;min-width:0"><div class="lname">'+p.desc+'<span class="badge badge-'+p.date+'">dia '+p.date+'</span></div><div class="lmeta">R$'+p.taxa.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h · '+p.horas+'h/dia · '+p.dias+'d · '+th+'h'+(periodo?' · '+periodo:'')+'</div></div><div style="display:flex;align-items:center;gap:4px"><span class="lval">'+fmt(p.sub)+'</span><button class="bdel" onclick="removeReceita(\''+p.id+'\')">✕</button></div></div>';
-  }).join('');
+    var btn='<button class="bdel" data-rid="'+p.id+'">✕</button>';
+    return'<div class="litem"><div style="flex:1;min-width:0">'
+      +'<div class="lname">'+p.desc+'</div>'
+      +'<div class="lmeta">R$'+p.taxa.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h · '+p.horas+'h/dia · '+p.dias+'d · '+th+'h</div>'
+      +'</div><div style="display:flex;align-items:center;gap:4px">'
+      +'<span class="lval">'+fmt(p.sub)+'</span>'
+      +btn
+      +'</div></div>';
+  }
+
+  var html='';
+  ordemGrupos.forEach(function(key){
+    var g=grupos[key];
+    var label=g.mes+(g.ano?' '+g.ano:'');
+    var totalMes=(g.d16.concat(g.d25)).reduce(function(a,p){return a+p.sub;},0);
+    var t16=g.d16.reduce(function(a,p){return a+p.sub;},0);
+    var t25=g.d25.reduce(function(a,p){return a+p.sub;},0);
+
+    html+='<div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;margin-bottom:10px;overflow:hidden;">';
+    html+='<div style="background:#f5f5f3;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">'
+      +'<span style="font-size:13px;font-weight:500;color:#1a1a1a;">📅 '+label+'</span>'
+      +'<span style="font-size:13px;font-weight:500;color:#185FA5;">'+fmt(totalMes)+'</span>'
+    +'</div>';
+    if(g.d16.length){
+      html+='<div class="dshdr dshdr-16" style="border-radius:0;"><span>Dia 16</span><span>'+fmt(t16)+'</span></div>';
+      html+=g.d16.map(itemHtml).join('');
+    }
+    if(g.d25.length){
+      html+='<div class="dshdr dshdr-25" style="border-radius:0;"><span>Dia 25</span><span>'+fmt(t25)+'</span></div>';
+      html+=g.d25.map(itemHtml).join('');
+    }
+    html+='</div>';
+  });
+
+  el.innerHTML=html;
   updateMeta();
 }
 
