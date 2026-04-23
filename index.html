@@ -334,6 +334,8 @@ document.addEventListener('click',function(e){
   if(rdel){var rid=rdel.getAttribute('data-rid');if(rid)removeReceita(rid);}
   var ddel=e.target.closest('[data-did]');
   if(ddel){var did=ddel.getAttribute('data-did');if(did)removeDespesa(did);}
+  var bmk=e.target.closest('[data-meskey]');
+  if(bmk){var mk=bmk.getAttribute('data-meskey');if(mk)toggleMesHome(mk);}
   // Toggle paga
   var btnp=e.target.closest('[data-pid]');
   if(btnp){var pid=btnp.getAttribute('data-pid');var pagaAtual=btnp.getAttribute('data-paga')==='true';if(pid)togglePaga(pid,pagaAtual);}
@@ -828,121 +830,163 @@ function buildDonutChart(grupos,total){
 
 
 function renderHome(){
-  var totalR=getTotalR(),totalD=getTotalD(),saldo=totalR-totalD;
+  var MLIST=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var filtroMes=window.homeFiltroMes||'';
+
+  var recFiltradas=filtroMes?receitas.filter(function(p){return p.mes===filtroMes;}):receitas;
+  var despFiltradas=filtroMes?despesas.filter(function(p){return p.mes===filtroMes;}):despesas;
+  var totalR=recFiltradas.reduce(function(a,p){return a+p.sub;},0);
+  var totalD=despFiltradas.reduce(function(a,p){return a+p.valor;},0);
+  var saldo=totalR-totalD;
+  var r16=recFiltradas.filter(function(p){return p.date===16;}).reduce(function(a,p){return a+p.sub;},0);
+  var r25=recFiltradas.filter(function(p){return p.date===25;}).reduce(function(a,p){return a+p.sub;},0);
+  var d16=despFiltradas.filter(function(p){return p.date===16;}).reduce(function(a,p){return a+p.valor;},0);
+  var d25=despFiltradas.filter(function(p){return p.date===25;}).reduce(function(a,p){return a+p.valor;},0);
   var pctD=totalR>0?Math.min(100,(totalD/totalR)*100):0;
 
-  if(!totalR&&!totalD){
+  if(!receitas.length&&!despesas.length){
     document.getElementById('home-summary').innerHTML='<div class="empty" style="background:#fff;border-radius:12px;border:1px solid #e5e5e5">Adicione receitas e despesas para ver o resumo.</div>';
     return;
   }
 
-  // Cards totais gerais
-  var html='<div class="sgrid">'
-    +'<div class="card"><div class="slabel">Receitas total</div><div class="sval b">'+fmt(totalR)+'</div><div class="ssub">'+receitas.length+' projeto'+(receitas.length!==1?'s':'')+'</div></div>'
-    +'<div class="card"><div class="slabel">Despesas total</div><div class="sval r">'+fmt(totalD)+'</div><div class="ssub">'+despesas.length+' item'+(despesas.length!==1?'s':'')+'</div></div>'
-    +'<div class="card full"><div class="slabel">Saldo geral</div><div class="sval '+(saldo>=0?'g':'r')+'">'+fmt(saldo)+'</div>'
+  // Seletor de mês
+  var mSet={},mDisp=[];
+  receitas.concat(despesas).forEach(function(p){if(p.mes&&!mSet[p.mes]){mSet[p.mes]=true;mDisp.push(p.mes);}});
+  mDisp.sort(function(a,b){return MLIST.indexOf(a)-MLIST.indexOf(b);});
+  var opts='<option value="">Todos os meses</option>';
+  mDisp.forEach(function(m){opts+='<option value="'+m+'"'+(filtroMes===m?' selected':'')+'>'+m+'</option>';});
+
+  var html='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
+    +'<span style="font-size:13px;font-weight:500;">Resumo'+(filtroMes?' — '+filtroMes:'')+'</span>'
+    +'<select id="home-filtro-mes" style="font-size:12px;padding:5px 10px;border:1px solid #ddd;border-radius:8px;background:#fff;font-family:inherit;cursor:pointer;">'+opts+'</select>'
+  +'</div>';
+
+  html+='<div class="sgrid">'
+    +'<div class="card"><div class="slabel">Receitas</div><div class="sval b">'+fmt(totalR)+'</div><div class="ssub">'+recFiltradas.length+' projeto'+(recFiltradas.length!==1?'s':'')+'</div></div>'
+    +'<div class="card"><div class="slabel">Despesas</div><div class="sval r">'+fmt(totalD)+'</div><div class="ssub">'+despFiltradas.length+' item'+(despFiltradas.length!==1?'s':'')+'</div></div>'
+    +'<div class="card full"><div class="slabel">Saldo</div><div class="sval '+(saldo>=0?'g':'r')+'">'+fmt(saldo)+'</div>'
       +'<div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-top:8px;margin-bottom:4px;"><span>Despesas vs receita</span><span>'+pctD.toFixed(1)+'%</span></div>'
       +'<div class="prog-bg"><div class="prog-fill" style="width:'+pctD.toFixed(1)+'%;background:'+(pctD>80?'#a32d2d':pctD>50?'#718096':'#2d7a2d')+'"></div></div>'
     +'</div>'
   +'</div>';
 
-  // Visão mês a mês com dia 16 e 25 internos
-  var MLIST=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  html+='<div class="day-split">'
+    +'<div class="day-card"><div class="day-hdr day-hdr-16"><span>Dia 16</span><span>'+fmt(r16-d16)+'</span></div><div class="day-body">'
+      +'<div class="day-row"><span class="day-rl">Receita</span><span class="day-rv">'+fmt(r16)+'</span></div>'
+      +'<div class="day-row"><span class="day-rl">Despesa</span><span class="day-rv r">'+fmt(d16)+'</span></div>'
+      +'<div class="day-row"><span class="day-rl">Saldo</span><span class="day-rv '+((r16-d16)>=0?'g':'r')+'">'+fmt(r16-d16)+'</span></div>'
+    +'</div></div>'
+    +'<div class="day-card"><div class="day-hdr day-hdr-25"><span>Dia 25</span><span>'+fmt(r25-d25)+'</span></div><div class="day-body">'
+      +'<div class="day-row"><span class="day-rl">Receita</span><span class="day-rv">'+fmt(r25)+'</span></div>'
+      +'<div class="day-row"><span class="day-rl">Despesa</span><span class="day-rv r">'+fmt(d25)+'</span></div>'
+      +'<div class="day-row"><span class="day-rl">Saldo</span><span class="day-rv '+((r25-d25)>=0?'g':'r')+'">'+fmt(r25-d25)+'</span></div>'
+    +'</div></div>'
+  +'</div>';
+
+  // Mês a mês
+  var hoje=new Date(),anoAtual=hoje.getFullYear(),mesAtual=hoje.getMonth();
   var meses={};
   receitas.forEach(function(p){
     var k=(p.mes||'Sem mês')+'|'+(p.ano||'');
-    if(!meses[k]) meses[k]={mes:p.mes||'Sem mês',ano:p.ano||'',r:0,d:0,r16:0,r25:0,d16:0,d25:0};
-    meses[k].r+=p.sub;
-    if(p.date===16) meses[k].r16+=p.sub; else meses[k].r25+=p.sub;
+    if(!meses[k])meses[k]={mes:p.mes||'Sem mês',ano:p.ano||'',r:0,d:0,r16:0,r25:0,d16:0,d25:0};
+    meses[k].r+=p.sub; if(p.date===16)meses[k].r16+=p.sub;else meses[k].r25+=p.sub;
   });
   despesas.forEach(function(p){
     var k=(p.mes||'Sem mês')+'|'+(p.ano||'');
-    if(!meses[k]) meses[k]={mes:p.mes||'Sem mês',ano:p.ano||'',r:0,d:0,r16:0,r25:0,d16:0,d25:0};
-    meses[k].d+=p.valor;
-    if(p.date===16) meses[k].d16+=p.valor; else meses[k].d25+=p.valor;
+    if(!meses[k])meses[k]={mes:p.mes||'Sem mês',ano:p.ano||'',r:0,d:0,r16:0,r25:0,d16:0,d25:0};
+    meses[k].d+=p.valor; if(p.date===16)meses[k].d16+=p.valor;else meses[k].d25+=p.valor;
   });
-
-  // Filtrar apenas mês atual e futuros
-  var hoje=new Date();
-  var anoAtual=hoje.getFullYear();
-  var mesAtual=hoje.getMonth(); // 0-11
-
   var mKeys=Object.keys(meses).filter(function(k){
-    var m=meses[k];
-    var mIdx=MLIST.indexOf(m.mes);
-    var mAno=parseInt(m.ano||0);
-    return (mAno>anoAtual) || (mAno===anoAtual && mIdx>=mesAtual);
+    var m=meses[k],mIdx=MLIST.indexOf(m.mes),mAno=parseInt(m.ano||0);
+    return (mAno>anoAtual)||(mAno===anoAtual&&mIdx>=mesAtual);
   }).sort(function(a,b){
     var ma=meses[a],mb=meses[b];
     return (parseInt(ma.ano||0)*12+MLIST.indexOf(ma.mes))-(parseInt(mb.ano||0)*12+MLIST.indexOf(mb.mes));
   });
 
   if(mKeys.length){
-    html+='<div style="font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin:4px 0 8px;">Mês a mês</div>';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 8px;">'
+      +'<span style="font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Mês a mês</span>'
+      +'<button id="btn-toggle-all" style="font-size:11px;background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit;color:#555;">⊞ Expandir tudo</button>'
+    +'</div>';
+
     mKeys.forEach(function(k){
       var m=meses[k];
-      var saldoM=m.r-m.d;
-      var saldo16=m.r16-m.d16;
-      var saldo25=m.r25-m.d25;
+      var saldoM=m.r-m.d,saldo16=m.r16-m.d16,saldo25=m.r25-m.d25;
       var label=m.mes+(m.ano?' '+m.ano:'');
       var pctM=m.r>0?Math.min(100,(m.d/m.r*100)):0;
+      var mk='meskey-'+k.replace(/[^a-zA-Z0-9]/g,'');
+      var isOpen=window.mesOpen&&window.mesOpen[mk];
 
       html+='<div class="card" style="margin-bottom:10px;padding:0;overflow:hidden;">';
-
-      // Header do mês
-      html+='<div style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center;background:#f5f5f3;border-bottom:1px solid #e5e5e5;">'
+      html+='<div data-meskey="'+mk+'" style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center;background:#f5f5f3;border-bottom:1px solid #e5e5e5;cursor:pointer;">'
         +'<span style="font-size:14px;font-weight:500;">📅 '+label+'</span>'
-        +'<span style="font-size:14px;font-weight:500;color:'+(saldoM>=0?'#2d7a2d':'#a32d2d')+';">'+fmt(saldoM)+'</span>'
+        +'<div style="display:flex;align-items:center;gap:10px;">'
+          +'<span style="font-size:14px;font-weight:500;color:'+(saldoM>=0?'#2d7a2d':'#a32d2d')+';">'+fmt(saldoM)+'</span>'
+          +'<span id="arr-'+mk+'" style="color:#888;font-size:12px;">'+(isOpen?'▲':'▼')+'</span>'
+        +'</div>'
       +'</div>';
-
-      // Resumo geral do mês
-      html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-bottom:1px solid #f0f0f0;">'
+      html+='<div id="body-'+mk+'" style="display:'+(isOpen?'block':'none')+'">';
+      html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #f0f0f0;">'
         +'<div style="padding:10px 14px;border-right:1px solid #f0f0f0;"><div style="font-size:10px;color:#888;text-transform:uppercase;margin-bottom:3px;">Receita</div><div style="font-size:13px;font-weight:500;color:#185FA5;">'+fmt(m.r)+'</div></div>'
         +'<div style="padding:10px 14px;border-right:1px solid #f0f0f0;"><div style="font-size:10px;color:#888;text-transform:uppercase;margin-bottom:3px;">Despesa</div><div style="font-size:13px;font-weight:500;color:#a32d2d;">'+fmt(m.d)+'</div></div>'
         +'<div style="padding:10px 14px;"><div style="font-size:10px;color:#888;text-transform:uppercase;margin-bottom:3px;">Saldo</div><div style="font-size:13px;font-weight:500;color:'+(saldoM>=0?'#2d7a2d':'#a32d2d')+';">'+fmt(saldoM)+'</div></div>'
       +'</div>';
-
-      // Barra de progresso
       html+='<div style="padding:6px 14px;border-bottom:1px solid #f0f0f0;">'
         +'<div style="display:flex;justify-content:space-between;font-size:10px;color:#888;margin-bottom:3px;"><span>Comprometido</span><span>'+pctM.toFixed(1)+'%</span></div>'
         +'<div style="height:5px;background:#f0f0ee;border-radius:99px;overflow:hidden;"><div style="height:100%;border-radius:99px;background:'+(pctM>80?'#a32d2d':pctM>50?'#718096':'#2d7a2d')+';width:'+pctM.toFixed(1)+'%;"></div></div>'
       +'</div>';
-
-      // Dia 16 e Dia 25 lado a lado
       html+='<div style="display:grid;grid-template-columns:1fr 1fr;">';
-
-      // Dia 16
-      html+='<div style="border-right:1px solid #f0f0f0;">'
-        +'<div style="background:#4a5568;padding:7px 14px;display:flex;justify-content:space-between;">'
-          +'<span style="color:#fff;font-size:12px;font-weight:500;">Dia 16</span>'
-          +'<span style="color:#fff;font-size:12px;">'+fmt(saldo16)+'</span>'
-        +'</div>'
-        +'<div style="padding:8px 14px;">'
-          +'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;"><span style="color:#888;">Receita</span><span style="font-weight:500;">'+fmt(m.r16)+'</span></div>'
-          +'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;"><span style="color:#888;">Despesa</span><span style="font-weight:500;color:#a32d2d;">'+fmt(m.d16)+'</span></div>'
-          +'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;border-top:1px solid #f5f5f5;margin-top:2px;"><span style="color:#888;">Saldo</span><span style="font-weight:500;color:'+(saldo16>=0?'#2d7a2d':'#a32d2d')+';">'+fmt(saldo16)+'</span></div>'
-        +'</div>'
-      +'</div>';
-
-      // Dia 25
-      html+='<div>'
-        +'<div style="background:#718096;padding:7px 14px;display:flex;justify-content:space-between;">'
-          +'<span style="color:#fff;font-size:12px;font-weight:500;">Dia 25</span>'
-          +'<span style="color:#fff;font-size:12px;">'+fmt(saldo25)+'</span>'
-        +'</div>'
-        +'<div style="padding:8px 14px;">'
-          +'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;"><span style="color:#888;">Receita</span><span style="font-weight:500;">'+fmt(m.r25)+'</span></div>'
-          +'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;"><span style="color:#888;">Despesa</span><span style="font-weight:500;color:#a32d2d;">'+fmt(m.d25)+'</span></div>'
-          +'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;border-top:1px solid #f5f5f5;margin-top:2px;"><span style="color:#888;">Saldo</span><span style="font-weight:500;color:'+(saldo25>=0?'#2d7a2d':'#a32d2d')+';">'+fmt(saldo25)+'</span></div>'
-        +'</div>'
-      +'</div>';
-
-      html+='</div></div>';
+      html+='<div style="border-right:1px solid #f0f0f0;"><div style="background:#4a5568;padding:7px 14px;display:flex;justify-content:space-between;"><span style="color:#fff;font-size:12px;font-weight:500;">Dia 16</span><span style="color:#fff;font-size:12px;">'+fmt(saldo16)+'</span></div><div style="padding:8px 14px;">'
+        +'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;"><span style="color:#888;">Receita</span><span style="font-weight:500;">'+fmt(m.r16)+'</span></div>'
+        +'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;"><span style="color:#888;">Despesa</span><span style="font-weight:500;color:#a32d2d;">'+fmt(m.d16)+'</span></div>'
+        +'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;border-top:1px solid #f5f5f5;margin-top:2px;"><span style="color:#888;">Saldo</span><span style="font-weight:500;color:'+(saldo16>=0?'#2d7a2d':'#a32d2d')+';">'+fmt(saldo16)+'</span></div>'
+      +'</div></div>';
+      html+='<div><div style="background:#718096;padding:7px 14px;display:flex;justify-content:space-between;"><span style="color:#fff;font-size:12px;font-weight:500;">Dia 25</span><span style="color:#fff;font-size:12px;">'+fmt(saldo25)+'</span></div><div style="padding:8px 14px;">'
+        +'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;"><span style="color:#888;">Receita</span><span style="font-weight:500;">'+fmt(m.r25)+'</span></div>'
+        +'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;"><span style="color:#888;">Despesa</span><span style="font-weight:500;color:#a32d2d;">'+fmt(m.d25)+'</span></div>'
+        +'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;border-top:1px solid #f5f5f5;margin-top:2px;"><span style="color:#888;">Saldo</span><span style="font-weight:500;color:'+(saldo25>=0?'#2d7a2d':'#a32d2d')+';">'+fmt(saldo25)+'</span></div>'
+      +'</div></div>';
+      html+='</div></div></div>';
     });
   }
 
   document.getElementById('home-summary').innerHTML=html;
+
+  // Seletor de mês - event listener
+  var sel=document.getElementById('home-filtro-mes');
+  if(sel) sel.addEventListener('change',function(){window.homeFiltroMes=this.value;renderHome();});
+
+  // Botão expandir tudo
+  var btnAll=document.getElementById('btn-toggle-all');
+  if(btnAll) btnAll.addEventListener('click',function(){toggleAllMeses();});
+
   updateMeta();
+}
+
+window.mesOpen={};
+function toggleMesHome(key){
+  window.mesOpen[key]=!window.mesOpen[key];
+  var body=document.getElementById('body-'+key);
+  var arr=document.getElementById('arr-'+key);
+  if(body) body.style.display=window.mesOpen[key]?'block':'none';
+  if(arr) arr.textContent=window.mesOpen[key]?'▲':'▼';
+  var anyOpen=Object.values(window.mesOpen).some(function(v){return v;});
+  var btn=document.getElementById('btn-toggle-all');
+  if(btn) btn.textContent=anyOpen?'⊟ Colapsar tudo':'⊞ Expandir tudo';
+}
+
+function toggleAllMeses(){
+  var anyOpen=Object.values(window.mesOpen).some(function(v){return v;});
+  var toOpen=!anyOpen;
+  document.querySelectorAll('[id^="body-meskey-"]').forEach(function(b){
+    var k=b.id.replace('body-','');
+    window.mesOpen[k]=toOpen;
+    b.style.display=toOpen?'block':'none';
+  });
+  document.querySelectorAll('[id^="arr-meskey-"]').forEach(function(a){a.textContent=toOpen?'▲':'▼';});
+  var btn=document.getElementById('btn-toggle-all');
+  if(btn) btn.textContent=toOpen?'⊟ Colapsar tudo':'⊞ Expandir tudo';
 }
 
 // Firebase listeners
