@@ -168,14 +168,14 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
       <div><label>Dias úteis</label><input type="number" id="r-dias" placeholder="22" min="0" step="1" oninput="recalcPreview()"/></div>
     </div>
     <div class="grid2">
-      <div><label>Mês</label>
+      <div><label>Mês <span style="color:#a32d2d">*</span></label>
         <select id="r-mes"><option value="">-- Mês --</option>
           <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
           <option>Maio</option><option>Junho</option><option>Julho</option><option>Agosto</option>
           <option>Setembro</option><option>Outubro</option><option>Novembro</option><option>Dezembro</option>
         </select>
       </div>
-      <div><label>Ano</label><input type="number" id="r-ano" placeholder="2026" min="2020" max="2099"/></div>
+      <div><label>Ano <span style="color:#a32d2d">*</span></label><input type="number" id="r-ano" placeholder="2026" min="2020" max="2099"/></div>
     </div>
     <label>Data de pagamento</label>
     <div class="dtoggle">
@@ -214,14 +214,14 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
     </div>
     <div class="field"><label>Valor (R$)</label><input type="number" id="d-valor" placeholder="0,00" min="0" step="0.01"/></div>
     <div class="grid2">
-      <div><label>Mês</label>
+      <div><label>Mês <span style="color:#a32d2d">*</span></label>
         <select id="d-mes"><option value="">-- Mês --</option>
           <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
           <option>Maio</option><option>Junho</option><option>Julho</option><option>Agosto</option>
           <option>Setembro</option><option>Outubro</option><option>Novembro</option><option>Dezembro</option>
         </select>
       </div>
-      <div><label>Ano</label><input type="number" id="d-ano" placeholder="2026" min="2020" max="2099"/></div>
+      <div><label>Ano <span style="color:#a32d2d">*</span></label><input type="number" id="d-ano" placeholder="2026" min="2020" max="2099"/></div>
     </div>
     <label>Data de pagamento</label>
     <div class="dtoggle">
@@ -394,7 +394,8 @@ function addReceita(){
   var mes=document.getElementById('r-mes').value;
   var ano=document.getElementById('r-ano').value;
   if(!desc){document.getElementById('r-desc').focus();return;}
-  if(!taxa||!horas||!dias)return;
+  if(!taxa||!horas||!dias){alert('Preencha taxa, horas e dias.');return;}
+  if(!mes||!ano){alert('Informe o mês e o ano da receita.');return;}
   var btn=document.getElementById('r-btn-add');btn.disabled=true;
   db.collection('receitas').add({desc:desc,taxa:taxa,horas:horas,dias:dias,sub:calcSub(taxa,horas,dias),date:rDate,mes:mes,ano:ano,criadoEm:firebase.firestore.FieldValue.serverTimestamp()})
   .then(function(){
@@ -412,7 +413,8 @@ function addDespesa(){
   var mes=document.getElementById('d-mes').value;
   var ano=document.getElementById('d-ano').value;
   if(!desc){document.getElementById('d-desc').focus();return;}
-  if(!valor)return;
+  if(!valor){alert('Informe o valor.');return;}
+  if(!mes||!ano){alert('Informe o mês e o ano da despesa.');return;}
   var btn=document.getElementById('d-btn-add');btn.disabled=true;
   db.collection('despesas').add({desc:desc,cat:cat,valor:valor,date:dDate,mes:mes,ano:ano,criadoEm:firebase.firestore.FieldValue.serverTimestamp()})
   .then(function(){
