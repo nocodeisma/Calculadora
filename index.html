@@ -445,6 +445,7 @@ function addDespesa(){
     ['d-desc','d-valor'].forEach(function(id){document.getElementById(id).value='';});
     document.getElementById('d-cat').value='';
     document.getElementById('d-desc').focus();setSynced(true);
+    enviarWhatsApp('Nova despesa cadastrada: '+cat+', '+desc+' — '+fmt(valor)+(mes?' ('+mes+(ano?' '+ano:'')+'）':''));
   }).catch(function(e){setSynced(false);alert('Erro: '+e.message);})
   .finally(function(){btn.disabled=false;});
 }
@@ -987,6 +988,14 @@ function toggleAllMeses(){
   document.querySelectorAll('[id^="arr-meskey-"]').forEach(function(a){a.textContent=toOpen?'▲':'▼';});
   var btn=document.getElementById('btn-toggle-all');
   if(btn) btn.textContent=toOpen?'⊟ Colapsar tudo':'⊞ Expandir tudo';
+}
+
+// WhatsApp via CallMeBot
+function enviarWhatsApp(msg){
+  var phone='554999885727';
+  var apikey='1542451';
+  var url='https://api.callmebot.com/whatsapp.php?phone='+phone+'&apikey='+apikey+'&text='+encodeURIComponent(msg);
+  fetch(url).catch(function(){});
 }
 
 // Firebase listeners
