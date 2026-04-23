@@ -317,6 +317,15 @@ function toggleCat(key){
   if(arr){arr.textContent=window.catOpen[key]?'▲':'▼';}
 }
 
+// Event delegation para categorias
+document.addEventListener('click',function(e){
+  var hdr=e.target.closest('[data-catkey]');
+  if(hdr){
+    var key=hdr.getAttribute('data-catkey');
+    if(key) toggleCat(key);
+  }
+});
+
 function goTo(page){
   ['home','receita','despesa','historico'].forEach(function(p){document.getElementById('page-'+p).classList.add('hidden');});
   document.getElementById('page-'+page).classList.remove('hidden');
@@ -499,7 +508,7 @@ function renderDespesas(){
       var catKey='cat-'+cat.replace(/[^a-zA-Z]/g,'');
       var isOpen=window.catOpen&&window.catOpen[catKey];
       html+='<div style="background:#fff;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:6px;overflow:hidden;">';
-      html+='<div id="hdr-'+catKey+'" style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#f5f5f3;" onclick="toggleCat(''+catKey+'')">';
+      html+='<div id="hdr-'+catKey+'" data-catkey="'+catKey+'" style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#f5f5f3;">';
       html+='<span style="font-size:13px;font-weight:500;color:#1a1a1a;">'+emoji+' '+cat+'</span>';
       html+='<div style="display:flex;align-items:center;gap:10px;">';
       html+='<span style="font-size:13px;font-weight:500;color:#a32d2d;">'+fmt(tot)+'</span>';
