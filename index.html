@@ -524,11 +524,11 @@ function renderReceitas(){
       +'<span style="font-size:13px;font-weight:500;color:#185FA5;">'+fmt(totalMes)+'</span>'
     +'</div>';
     if(g.d16.length){
-      html+='<div class="dshdr dshdr-16" style="border-radius:0;"><span>Dia 16</span><span>'+fmt(t16)+'</span></div>';
+      html+='<div style="background:#4a5568;padding:9px 14px;display:flex;justify-content:space-between;"><span style="color:#fff;font-size:13px;font-weight:500;">Dia 16</span><span style="color:#fff;font-size:13px;">'+fmt(t16)+'</span></div>';
       html+=g.d16.map(itemHtml).join('');
     }
     if(g.d25.length){
-      html+='<div class="dshdr dshdr-25" style="border-radius:0;"><span>Dia 25</span><span>'+fmt(t25)+'</span></div>';
+      html+='<div style="background:#718096;padding:9px 14px;display:flex;justify-content:space-between;"><span style="color:#fff;font-size:13px;font-weight:500;">Dia 25</span><span style="color:#fff;font-size:13px;">'+fmt(t25)+'</span></div>';
       html+=g.d25.map(itemHtml).join('');
     }
     html+='</div>';
@@ -548,52 +548,123 @@ function renderDespesas(){
   var wrap=document.getElementById('d-fechar-wrap');
   if(!despesas.length){el.innerHTML='<div class="empty">Nenhuma despesa adicionada.</div>';wrap.classList.add('hidden');return;}
   wrap.classList.remove('hidden');
-  var total=despesas.reduce(function(a,p){return a+p.valor;},0);
+
+  var MLIST=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
   function itemHtml(p){
-    var periodo=p.mes?(p.mes+(p.ano?' '+p.ano:'')):'';
     var cat=getCat(p);
     var catLabel=(CATS_EMOJI[cat]||'📦')+' '+cat;
-    var meta2=viewMode==='dia'?catLabel+' · ':'<span class="badge badge-'+p.date+'" style="margin-left:0;margin-right:4px">dia '+p.date+'</span>';
-    return'<div class="litem"><div style="flex:1;min-width:0"><div class="lname">'+p.desc+'</div><div class="lmeta">'+meta2+(periodo||'Sem período')+'</div></div><div style="display:flex;align-items:center;gap:4px"><span class="lval" style="color:#a32d2d">'+fmt(p.valor)+'</span><button class="bdel" onclick="removeDespesa(\''+p.id+'\')">✕</button></div></div>';
+    var meta2=viewMode==='dia'?catLabel+' · ':'<span style="font-size:10px;font-weight:500;background:#e5e5e5;color:#555;border-radius:99px;padding:1px 7px;margin-right:4px;">dia '+p.date+'</span>';
+    return'<div class="litem"><div style="flex:1;min-width:0">'
+      +'<div class="lname">'+p.desc+'</div>'
+      +'<div class="lmeta">'+meta2+'</div>'
+      +'</div><div style="display:flex;align-items:center;gap:4px">'
+      +'<span class="lval" style="color:#a32d2d">'+fmt(p.valor)+'</span>'
+      +'<button class="bdel" data-did="'+p.id+'">✕</button>'
+      +'</div></div>';
   }
 
-  var toggleBtn='<div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><button onclick="toggleViewMode()" style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:inherit;color:#1a1a1a;">'+(viewMode==='dia'?'📂 Ver por categoria':'📅 Ver por dia de pagamento')+'</button></div>';
+  var toggleBtn='<div style="display:flex;justify-content:flex-end;margin-bottom:10px;">'
+    +'<button onclick="toggleViewMode()" style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:inherit;color:#1a1a1a;">'
+    +(viewMode==='dia'?'📂 Ver por categoria':'📅 Ver por dia de pagamento')
+    +'</button></div>';
+
   var html=toggleBtn;
+  var total=despesas.reduce(function(a,p){return a+p.valor;},0);
 
   if(viewMode==='dia'){
-    var d16=despesas.filter(function(p){return p.date===16;});
-    var d25=despesas.filter(function(p){return p.date===25;});
-    var t16=d16.reduce(function(a,p){return a+p.valor;},0);
-    var t25=d25.reduce(function(a,p){return a+p.valor;},0);
-    html+='<div class="dshdr dshdr-16"><span>Dia 16</span><span>'+fmt(t16)+'</span></div>';
-    html+=d16.length?d16.map(itemHtml).join(''):'<div class="empty" style="background:#fff;border-radius:10px;margin-bottom:6px">Nenhuma despesa no dia 16.</div>';
-    html+='<div class="dshdr dshdr-25" style="margin-top:8px"><span>Dia 25</span><span>'+fmt(t25)+'</span></div>';
-    html+=d25.length?d25.map(itemHtml).join(''):'<div class="empty" style="background:#fff;border-radius:10px;margin-bottom:6px">Nenhuma despesa no dia 25.</div>';
+    // Agrupar por mês+ano
+    var grupos={},ordemGrupos=[];
+    despesas.forEach(function(p){
+      var k=(p.mes||'Sem mês')+'|'+(p.ano||'');
+      if(!grupos[k]){grupos[k]={mes:p.mes||'Sem mês',ano:p.ano||'',d16:[],d25:[]};ordemGrupos.push(k);}
+      if(p.date===25) grupos[k].d25.push(p);
+      else grupos[k].d16.push(p);
+    });
+    ordemGrupos.sort(function(a,b){
+      var ga=grupos[a],gb=grupos[b];
+      var ai=parseInt(ga.ano||0)*12+MLIST.indexOf(ga.mes);
+      var bi=parseInt(gb.ano||0)*12+MLIST.indexOf(gb.mes);
+      return ai-bi;
+    });
+    ordemGrupos.forEach(function(key){
+      var g=grupos[key];
+      var label=g.mes+(g.ano?' '+g.ano:'');
+      var totalMes=(g.d16.concat(g.d25)).reduce(function(a,p){return a+p.valor;},0);
+      var t16=g.d16.reduce(function(a,p){return a+p.valor;},0);
+      var t25=g.d25.reduce(function(a,p){return a+p.valor;},0);
+      html+='<div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;margin-bottom:10px;overflow:hidden;">';
+      html+='<div style="background:#f5f5f3;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">'
+        +'<span style="font-size:13px;font-weight:500;color:#1a1a1a;">📅 '+label+'</span>'
+        +'<span style="font-size:13px;font-weight:500;color:#a32d2d;">'+fmt(totalMes)+'</span>'
+      +'</div>';
+      if(g.d16.length){
+        html+='<div style="background:#4a5568;padding:9px 14px;display:flex;justify-content:space-between;align-items:center;">'
+          +'<span style="color:#fff;font-size:13px;font-weight:500;">Dia 16</span>'
+          +'<span style="color:#fff;font-size:13px;">'+fmt(t16)+'</span>'
+        +'</div>';
+        html+=g.d16.map(itemHtml).join('');
+      }
+      if(g.d25.length){
+        html+='<div style="background:#718096;padding:9px 14px;display:flex;justify-content:space-between;align-items:center;">'
+          +'<span style="color:#fff;font-size:13px;font-weight:500;">Dia 25</span>'
+          +'<span style="color:#fff;font-size:13px;">'+fmt(t25)+'</span>'
+        +'</div>';
+        html+=g.d25.map(itemHtml).join('');
+      }
+      html+='</div>';
+    });
+
   } else {
-    var grupos={};
-    despesas.forEach(function(p){var c=getCat(p);if(!grupos[c])grupos[c]=[];grupos[c].push(p);});
-    var allCats=CAT_ORDER.filter(function(c){return grupos[c];});
-    Object.keys(grupos).forEach(function(c){if(CAT_ORDER.indexOf(c)<0)allCats.push(c);});
-    allCats.forEach(function(cat){
-      var itens=grupos[cat];
-      var tot=itens.reduce(function(a,p){return a+p.valor;},0);
-      var pct=total>0?(tot/total*100).toFixed(1):'0.0';
-      var emoji=CATS_EMOJI[cat]||'📦';
-      var catKey='cat-'+cat.replace(/[^a-zA-Z]/g,'');
-      var isOpen=window.catOpen&&window.catOpen[catKey];
-      html+='<div style="background:#fff;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:6px;overflow:hidden;">';
-      html+='<div id="hdr-'+catKey+'" data-catkey="'+catKey+'" style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#f5f5f3;">';
-      html+='<span style="font-size:13px;font-weight:500;color:#1a1a1a;">'+emoji+' '+cat+'</span>';
-      html+='<div style="display:flex;align-items:center;gap:10px;">';
-      html+='<span style="font-size:13px;font-weight:500;color:#a32d2d;">'+fmt(tot)+'</span>';
-      html+='<span style="font-size:11px;color:#888;background:#e5e5e5;border-radius:99px;padding:2px 8px;">'+pct+'%</span>';
-      html+='<span id="arr-'+catKey+'" style="font-size:11px;color:#888;">'+(isOpen?'▲':'▼')+'</span>';
-      html+='</div></div>';
-      html+='<div id="body-'+catKey+'" style="display:'+(isOpen?'block':'none')+';">'+itens.map(itemHtml).join('')+'</div>';
+    // Agrupar por mês+ano, dentro de cada mês por categoria
+    var mGrupos={},mOrdem=[];
+    despesas.forEach(function(p){
+      var mk=(p.mes||'Sem mês')+'|'+(p.ano||'');
+      if(!mGrupos[mk]){mGrupos[mk]={mes:p.mes||'Sem mês',ano:p.ano||'',cats:{}};mOrdem.push(mk);}
+      var cat=getCat(p);
+      if(!mGrupos[mk].cats[cat]) mGrupos[mk].cats[cat]=[];
+      mGrupos[mk].cats[cat].push(p);
+    });
+    mOrdem.sort(function(a,b){
+      var ga=mGrupos[a],gb=mGrupos[b];
+      var ai=parseInt(ga.ano||0)*12+MLIST.indexOf(ga.mes);
+      var bi=parseInt(gb.ano||0)*12+MLIST.indexOf(gb.mes);
+      return ai-bi;
+    });
+    mOrdem.forEach(function(mk){
+      var gm=mGrupos[mk];
+      var label=gm.mes+(gm.ano?' '+gm.ano:'');
+      var totalMes=Object.keys(gm.cats).reduce(function(a,c){return a+gm.cats[c].reduce(function(b,p){return b+p.valor;},0);},0);
+      html+='<div style="background:#fff;border:1px solid #e5e5e5;border-radius:12px;margin-bottom:10px;overflow:hidden;">';
+      html+='<div style="background:#f5f5f3;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">'
+        +'<span style="font-size:13px;font-weight:500;color:#1a1a1a;">📅 '+label+'</span>'
+        +'<span style="font-size:13px;font-weight:500;color:#a32d2d;">'+fmt(totalMes)+'</span>'
+      +'</div>';
+      var allCats=CAT_ORDER.filter(function(c){return gm.cats[c];});
+      Object.keys(gm.cats).forEach(function(c){if(CAT_ORDER.indexOf(c)<0)allCats.push(c);});
+      allCats.forEach(function(cat){
+        var itens=gm.cats[cat];
+        var tot=itens.reduce(function(a,p){return a+p.valor;},0);
+        var pct=totalMes>0?(tot/totalMes*100).toFixed(1):'0.0';
+        var emoji=CATS_EMOJI[cat]||'📦';
+        var catKey='cat-'+mk.replace(/[^a-zA-Z0-9]/g,'')+cat.replace(/[^a-zA-Z]/g,'');
+        var isOpen=window.catOpen&&window.catOpen[catKey];
+        html+='<div style="background:#fff;border-top:1px solid #f0f0f0;">';
+        html+='<div data-catkey="'+catKey+'" style="padding:9px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#fafafa;">'
+          +'<span style="font-size:13px;font-weight:500;color:#1a1a1a;">'+emoji+' '+cat+'</span>'
+          +'<div style="display:flex;align-items:center;gap:8px;">'
+            +'<span style="font-size:13px;font-weight:500;color:#a32d2d;">'+fmt(tot)+'</span>'
+            +'<span style="font-size:11px;color:#888;background:#e5e5e5;border-radius:99px;padding:2px 7px;">'+pct+'%</span>'
+            +'<span id="arr-'+catKey+'" style="font-size:11px;color:#888;">'+(isOpen?'▲':'▼')+'</span>'
+          +'</div>'
+        +'</div>';
+        html+='<div id="body-'+catKey+'" style="display:'+(isOpen?'block':'none')+';">'+itens.map(itemHtml).join('')+'</div>';
+        html+='</div>';
+      });
       html+='</div>';
     });
   }
+
   html+='<div class="dtotal-bar"><span>Total de despesas</span><span>'+fmt(total)+'</span></div>';
   el.innerHTML=html;
 }
