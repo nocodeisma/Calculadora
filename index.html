@@ -496,19 +496,18 @@ function renderDespesas(){
       var tot=itens.reduce(function(a,p){return a+p.valor;},0);
       var pct=total>0?(tot/total*100).toFixed(1):'0.0';
       var emoji=CATS_EMOJI[cat]||'📦';
-      var catKey='cat-'+cat.replace(/[^a-z]/gi,'');
+      var catKey='cat-'+cat.replace(/[^a-zA-Z]/g,'');
       var isOpen=window.catOpen&&window.catOpen[catKey];
-      html+='<div style="background:#fff;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:6px;overflow:hidden;">'
-        +'<div onclick="toggleCat(\''+catKey+'\',\''+cat+''')' style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#f5f5f3;">'
-          +'<span style="font-size:13px;font-weight:500;color:#1a1a1a;">'+emoji+' '+cat+'</span>'
-          +'<div style="display:flex;align-items:center;gap:10px;">'
-            +'<span style="font-size:13px;font-weight:500;color:#a32d2d;">'+fmt(tot)+'</span>'
-            +'<span style="font-size:11px;color:#888;background:#e5e5e5;border-radius:99px;padding:2px 8px;">'+pct+'%</span>'
-            +'<span id="arr-'+catKey+'" style="font-size:11px;color:#888;">'+( isOpen?'▲':'▼')+'</span>'
-          +'</div>'
-        +'</div>'
-        +'<div id="body-'+catKey+'" style="display:'+( isOpen?'block':'none')+';">'+itens.map(itemHtml).join('')+'</div>'
-      +'</div>';
+      html+='<div style="background:#fff;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:6px;overflow:hidden;">';
+      html+='<div id="hdr-'+catKey+'" style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#f5f5f3;" onclick="toggleCat(''+catKey+'')">';
+      html+='<span style="font-size:13px;font-weight:500;color:#1a1a1a;">'+emoji+' '+cat+'</span>';
+      html+='<div style="display:flex;align-items:center;gap:10px;">';
+      html+='<span style="font-size:13px;font-weight:500;color:#a32d2d;">'+fmt(tot)+'</span>';
+      html+='<span style="font-size:11px;color:#888;background:#e5e5e5;border-radius:99px;padding:2px 8px;">'+pct+'%</span>';
+      html+='<span id="arr-'+catKey+'" style="font-size:11px;color:#888;">'+(isOpen?'▲':'▼')+'</span>';
+      html+='</div></div>';
+      html+='<div id="body-'+catKey+'" style="display:'+(isOpen?'block':'none')+';">'+itens.map(itemHtml).join('')+'</div>';
+      html+='</div>';
     });
   }
   html+='<div class="dtotal-bar"><span>Total de despesas</span><span>'+fmt(total)+'</span></div>';
