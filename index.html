@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
-<title>Finanças</title>
+<title>Finanças v11</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
@@ -116,7 +116,7 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
   <div class="sync-dot" id="sync-dot"></div>
 </div>
 
-<!-- HOME -->
+
 <div id="page-home" class="home">
   <div class="home-title">Olá 👋</div>
   <div class="home-sub">Gerencie suas receitas e despesas</div>
@@ -136,7 +136,7 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
     <span style="font-size:20px;">📋</span>
     <div><span class="hbtn-label">Meses fechados</span><div class="hbtn-title">Histórico</div></div>
   </button>
-  <!-- META -->
+  
   <div class="fcard" style="margin-bottom:12px;">
     <div class="ftitle">Meta e hora extra</div>
     <div class="grid2">
@@ -156,7 +156,7 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
   <div id="home-summary"><div class="loading">Carregando...</div></div>
 </div>
 
-<!-- RECEITAS -->
+
 <div id="page-receita" class="section hidden">
   <div style="height:1rem"></div>
   <div class="fcard">
@@ -191,7 +191,7 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
   </div>
 </div>
 
-<!-- DESPESAS -->
+
 <div id="page-despesa" class="section hidden">
   <div style="height:1rem"></div>
   <div class="fcard">
@@ -236,13 +236,13 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
   </div>
 </div>
 
-<!-- HISTÓRICO -->
+
 <div id="page-historico" class="section hidden">
   <div style="height:1rem"></div>
   <div id="hist-list"><div class="loading">Carregando...</div></div>
 </div>
 
-<!-- MODAL -->
+
 <div class="modal-overlay hidden" id="modal-overlay">
   <div class="modal-box">
     <div class="modal-title" id="modal-title">Fechar mês</div>
@@ -601,8 +601,8 @@ function renderHistorico(){
 
 function buildDonutChart(grupos,total){
   if(!total) return '';
-  var cx=100,cy=100,r=75,inner=45;
-  var slices='',start=0;
+  var cx=160,cy=160,r=130,inner=75;
+  var slices='',labels='',start=0;
   var legendHtml='';
   CAT_ORDER.forEach(function(cat){
     if(!grupos[cat]) return;
@@ -611,6 +611,7 @@ function buildDonutChart(grupos,total){
     if(pct<=0) return;
     var cor=CAT_COLORS[cat]||'#888';
     var a1=start*2*Math.PI, a2=(start+pct)*2*Math.PI;
+    var amid=(start+pct/2)*2*Math.PI;
     var x1=cx+r*Math.sin(a1),y1=cy-r*Math.cos(a1);
     var x2=cx+r*Math.sin(a2),y2=cy-r*Math.cos(a2);
     var xi1=cx+inner*Math.sin(a1),yi1=cy-inner*Math.cos(a1);
@@ -618,16 +619,23 @@ function buildDonutChart(grupos,total){
     var lg=pct>0.5?1:0;
     if(pct>=1){
       slices+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+cor+'"/>';
-      slices+='<circle cx="'+cx+'" cy="'+cy+'" r="'+inner+'" fill="#fff"/>';
     } else {
       slices+='<path d="M'+x1+','+y1+' A'+r+','+r+' 0 '+lg+',1 '+x2+','+y2+' L'+xi2+','+yi2+' A'+inner+','+inner+' 0 '+lg+',0 '+xi1+','+yi1+' Z" fill="'+cor+'"/>';
     }
+    // Label com emoji e % no meio da fatia (só se fatia >= 5%)
+    if(pct>=0.05){
+      var lx=cx+(inner+(r-inner)*0.5)*Math.sin(amid);
+      var ly=cy-(inner+(r-inner)*0.5)*Math.cos(amid);
+      var emoji=CATS_EMOJI[cat]||'📦';
+      labels+='<text x="'+lx+'" y="'+(ly-6)+'" text-anchor="middle" style="font-size:13px;">'+emoji+'</text>';
+      labels+='<text x="'+lx+'" y="'+(ly+10)+'" text-anchor="middle" style="font-size:9px;fill:#fff;font-weight:600;">'+(pct*100).toFixed(0)+'%</text>';
+    }
     start+=pct;
-    var emoji=CATS_EMOJI[cat]||'📦';
+    var emoji2=CATS_EMOJI[cat]||'📦';
     legendHtml+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f5f5f5;">'
       +'<div style="display:flex;align-items:center;gap:8px;">'
         +'<div style="width:10px;height:10px;border-radius:2px;background:'+cor+';flex-shrink:0;"></div>'
-        +'<span style="font-size:12px;">'+emoji+' '+cat+'</span>'
+        +'<span style="font-size:12px;">'+emoji2+' '+cat+'</span>'
       +'</div>'
       +'<div style="text-align:right;">'
         +'<span style="font-size:12px;font-weight:500;color:#1a1a1a;">'+fmt(tot)+'</span>'
@@ -636,14 +644,17 @@ function buildDonutChart(grupos,total){
     +'</div>';
   });
   return '<div class="chart-wrap"><div class="chart-title">Despesas por categoria</div>'
-    +'<div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">'
-      +'<svg viewBox="0 0 200 200" style="width:140px;height:140px;flex-shrink:0;">'
-        +slices
-        +'<circle cx="'+cx+'" cy="'+cy+'" r="'+inner+'" fill="#fff"/>'
-        +'<text x="'+cx+'" y="'+(cy-6)+'" text-anchor="middle" style="font-size:13px;font-weight:600;fill:#1a1a1a;">'+fmt(total).replace('R$\u00a0','R$ ')+'</text>'
-        +'<text x="'+cx+'" y="'+(cy+12)+'" text-anchor="middle" style="font-size:9px;fill:#888;">TOTAL</text>'
-      +'</svg>'
-      +'<div style="flex:1;min-width:160px;">'+legendHtml+'</div>'
+    +'<div style="display:flex;gap:20px;align-items:flex-start;">'
+      +'<div style="flex-shrink:0;">'
+        +'<svg viewBox="0 0 320 320" style="width:200px;height:200px;">'
+          +slices
+          +'<circle cx="'+cx+'" cy="'+cy+'" r="'+inner+'" fill="#fff"/>'
+          +labels
+          +'<text x="'+cx+'" y="'+(cy-8)+'" text-anchor="middle" style="font-size:12px;font-weight:600;fill:#1a1a1a;">'+fmt(total)+'</text>'
+          +'<text x="'+cx+'" y="'+(cy+10)+'" text-anchor="middle" style="font-size:9px;fill:#888;">TOTAL</text>'
+        +'</svg>'
+      +'</div>'
+      +'<div style="flex:1;min-width:0;padding-top:4px;">'+legendHtml+'</div>'
     +'</div>'
   +'</div>';
 }
