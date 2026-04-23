@@ -280,7 +280,7 @@ var receitas=[],despesas=[],historico=[],rDate=16,dDate=16,modalTipo='',viewMode
 
 var CATS_EMOJI={Moradia:'🏠',Saúde:'❤️',Transporte:'🚗',Educação:'📚',Alimentação:'🍽️',Pessoal:'👤',Financeiro:'💳',Família:'👨‍👩‍👧',Serviços:'⚡',Outros:'📦'};
 var CAT_ORDER=['Moradia','Saúde','Transporte','Educação','Alimentação','Pessoal','Financeiro','Família','Serviços','Outros'];
-var CAT_COLORS={Moradia:'#185FA5',Saúde:'#e24b4a',Transporte:'#BA7517',Educação:'#5b3fa5',Alimentação:'#2d7a2d',Pessoal:'#e9850a',Financeiro:'#1a1a1a',Família:'#d4538e',Serviços:'#0891b2',Outros:'#888'};
+var CAT_COLORS={Moradia:'#4a5568',Saúde:'#718096',Transporte:'#a0aec0',Educação:'#2d3748',Alimentação:'#606978',Pessoal:'#8a9bb0',Financeiro:'#1a202c',Família:'#697080',Serviços:'#556275',Outros:'#b0bcc8'};
 
 // Mapeamento automático de categorias para despesas existentes
 var CAT_MAP={
@@ -306,6 +306,15 @@ function atualizarCategorias(lista){
       db.collection('despesas').doc(p.id).update({cat:CAT_MAP[p.desc]}).catch(function(){});
     }
   });
+}
+
+window.catOpen={};
+function toggleCat(key){
+  window.catOpen[key]=!window.catOpen[key];
+  var body=document.getElementById('body-'+key);
+  var arr=document.getElementById('arr-'+key);
+  if(body){body.style.display=window.catOpen[key]?'block':'none';}
+  if(arr){arr.textContent=window.catOpen[key]?'▲':'▼';}
 }
 
 function goTo(page){
@@ -480,28 +489,26 @@ function renderDespesas(){
   } else {
     var grupos={};
     despesas.forEach(function(p){var c=getCat(p);if(!grupos[c])grupos[c]=[];grupos[c].push(p);});
-    CAT_ORDER.forEach(function(cat){
-      if(!grupos[cat])return;
+    var allCats=CAT_ORDER.filter(function(c){return grupos[c];});
+    Object.keys(grupos).forEach(function(c){if(CAT_ORDER.indexOf(c)<0)allCats.push(c);});
+    allCats.forEach(function(cat){
       var itens=grupos[cat];
       var tot=itens.reduce(function(a,p){return a+p.valor;},0);
       var pct=total>0?(tot/total*100).toFixed(1):'0.0';
       var emoji=CATS_EMOJI[cat]||'📦';
-      var cor=CAT_COLORS[cat]||'#888';
-      // Header da categoria com soma e %
-      html+='<div style="background:'+cor+';padding:10px 14px;border-radius:10px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;">'
-        +'<span style="color:#fff;font-size:13px;font-weight:500;">'+emoji+' '+cat+'</span>'
-        +'<span style="color:#fff;font-size:13px;">'+fmt(tot)+'<span style="opacity:0.7;font-size:11px;margin-left:8px;">'+pct+'%</span></span>'
+      var catKey='cat-'+cat.replace(/[^a-z]/gi,'');
+      var isOpen=window.catOpen&&window.catOpen[catKey];
+      html+='<div style="background:#fff;border:1px solid #e5e5e5;border-radius:10px;margin-bottom:6px;overflow:hidden;">'
+        +'<div onclick="toggleCat(\''+catKey+'\',\''+cat+''')' style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#f5f5f3;">'
+          +'<span style="font-size:13px;font-weight:500;color:#1a1a1a;">'+emoji+' '+cat+'</span>'
+          +'<div style="display:flex;align-items:center;gap:10px;">'
+            +'<span style="font-size:13px;font-weight:500;color:#a32d2d;">'+fmt(tot)+'</span>'
+            +'<span style="font-size:11px;color:#888;background:#e5e5e5;border-radius:99px;padding:2px 8px;">'+pct+'%</span>'
+            +'<span id="arr-'+catKey+'" style="font-size:11px;color:#888;">'+( isOpen?'▲':'▼')+'</span>'
+          +'</div>'
+        +'</div>'
+        +'<div id="body-'+catKey+'" style="display:'+( isOpen?'block':'none')+';">'+itens.map(itemHtml).join('')+'</div>'
       +'</div>';
-      html+=itens.map(itemHtml).join('');
-    });
-    // Categorias não previstas
-    Object.keys(grupos).forEach(function(cat){
-      if(CAT_ORDER.indexOf(cat)>=0)return;
-      var itens=grupos[cat];
-      var tot=itens.reduce(function(a,p){return a+p.valor;},0);
-      var pct=total>0?(tot/total*100).toFixed(1):'0.0';
-      html+='<div style="background:#888;padding:10px 14px;border-radius:10px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;"><span style="color:#fff;font-size:13px;font-weight:500;">📦 '+cat+'</span><span style="color:#fff;font-size:13px;">'+fmt(tot)+'<span style="opacity:0.7;font-size:11px;margin-left:8px;">'+pct+'%</span></span></div>';
-      html+=itens.map(itemHtml).join('');
     });
   }
   html+='<div class="dtotal-bar"><span>Total de despesas</span><span>'+fmt(total)+'</span></div>';
