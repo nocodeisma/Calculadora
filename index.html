@@ -540,6 +540,11 @@ function renderReceitas(){
     if(!grupos[k]){grupos[k]={mes:p.mes||'Sem mês',ano:p.ano||'',d16:[],d25:[]};ordemGrupos.push(k);}
     if(p.date===25) grupos[k].d25.push(p); else grupos[k].d16.push(p);
   });
+  // Meses já fechados no histórico (receitas)
+  var mesesFechadosR={};
+  historico.forEach(function(h){if(h.tipo==='receita') mesesFechadosR[h.mes+'|'+h.ano]=true;});
+  ordemGrupos=ordemGrupos.filter(function(k){return !mesesFechadosR[k];});
+
   ordemGrupos.sort(function(a,b){
     var ga=grupos[a],gb=grupos[b];
     return (parseInt(ga.ano||0)*12+MLIST.indexOf(ga.mes))-(parseInt(gb.ano||0)*12+MLIST.indexOf(gb.mes));
@@ -642,6 +647,11 @@ function renderDespesas(){
       if(!grupos[k]){grupos[k]={mes:p.mes||'Sem mês',ano:p.ano||'',d16:[],d25:[]};ordemGrupos.push(k);}
       if(p.date===25) grupos[k].d25.push(p); else grupos[k].d16.push(p);
     });
+    // Meses já fechados no histórico (despesas)
+    var mesesFechadosD={};
+    historico.forEach(function(h){if(h.tipo==='despesa') mesesFechadosD[h.mes+'|'+h.ano]=true;});
+    ordemGrupos=ordemGrupos.filter(function(k){return !mesesFechadosD[k];});
+
     ordemGrupos.sort(function(a,b){
       var ga=grupos[a],gb=grupos[b];
       return (parseInt(ga.ano||0)*12+MLIST.indexOf(ga.mes))-(parseInt(gb.ano||0)*12+MLIST.indexOf(gb.mes));
@@ -684,6 +694,10 @@ function renderDespesas(){
       if(!mGrupos[mk2].cats[cat]) mGrupos[mk2].cats[cat]=[];
       mGrupos[mk2].cats[cat].push(p);
     });
+    var mesesFechadosD2={};
+    historico.forEach(function(h){if(h.tipo==='despesa') mesesFechadosD2[h.mes+'|'+h.ano]=true;});
+    mOrdem=mOrdem.filter(function(k){return !mesesFechadosD2[k];});
+
     mOrdem.sort(function(a,b){
       var ga=mGrupos[a],gb=mGrupos[b];
       return (parseInt(ga.ano||0)*12+MLIST.indexOf(ga.mes))-(parseInt(gb.ano||0)*12+MLIST.indexOf(gb.mes));
