@@ -793,7 +793,7 @@ function renderHistorico(){
         recHtml+='<div style="background:#f0f6ff;border-radius:8px;padding:8px 12px;margin-bottom:6px;">';
         (h.itens||[]).forEach(function(i){recHtml+='<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid #dce8f8;"><span>'+i.desc+'</span><span style="font-weight:500;color:#185FA5">'+fmt(i.valor)+'</span></div>';});
         recHtml+='<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#185FA5;padding-top:6px;"><span>Total</span><span>'+fmt(h.total)+'</span></div>';
-        recHtml+='<div style="display:flex;gap:8px;margin-top:8px;"><button class="hist-del" style="color:#185FA5;border-color:#185FA5;" onclick="reabrirMes(\''+h.id+'\',\'receita\',\''+h.mes+'\',\''+h.ano+'\')">↩ Reabrir</button><button class="hist-del" onclick="removeHistorico(\''+h.id+'\')">Remover</button></div></div>\';
+        recHtml+='<div style="display:flex;gap:8px;margin-top:8px;"><button class="hist-del" style="color:#185FA5;border-color:#185FA5;" onclick="reabrirMes(\''+h.id+'\',\'receita\',\''+h.mes+'\',\''+h.ano+'\')">↩ Reabrir</button><button class="hist-del" onclick="removeHistorico(\''+h.id+'\')" >Remover</button></div></div>';
       });
     }
     var despHtml='';
@@ -806,7 +806,7 @@ function renderHistorico(){
           despHtml+='<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid #f5dada;"><span>'+i.desc+(ce?'<span style="font-size:10px;color:#999;margin-left:6px;">'+ce+'</span>':'')+'</span><span style="font-weight:500;color:#a32d2d">'+fmt(i.valor)+'</span></div>';
         });
         despHtml+='<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#a32d2d;padding-top:6px;"><span>Total</span><span>'+fmt(h.total)+'</span></div>';
-        despHtml+='<div style="display:flex;gap:8px;margin-top:8px;"><button class="hist-del" style="color:#e05c00;border-color:#e05c00;" onclick="reabrirMes(\''+h.id+'\',\'despesa\',\''+h.mes+'\',\''+h.ano+'\')">↩ Reabrir</button><button class="hist-del" onclick="removeHistorico(\''+h.id+'\')">Remover</button></div></div>\';
+        despHtml+='<div style="display:flex;gap:8px;margin-top:8px;"><button class="hist-del" style="color:#e05c00;border-color:#e05c00;" onclick="reabrirMes(\''+h.id+'\',\'despesa\',\''+h.mes+'\',\''+h.ano+'\')">↩ Reabrir</button><button class="hist-del" onclick="removeHistorico(\''+h.id+'\')" >Remover</button></div></div>';
       });
     }
     return'<div style="background:#fff;border-radius:12px;border:1px solid #e5e5e5;margin-bottom:10px;overflow:hidden;">'
@@ -986,42 +986,37 @@ db.collection('config').doc('meta').get().then(function(doc){
   }
 }).catch(function(){});
 
-// Carrega tudo de uma vez via get() para evitar problemas de índice com onSnapshot+orderBy
-function carregarTudo(){
-  var promR=db.collection('receitas').orderBy('criadoEm','asc').get();
-  var promD=db.collection('despesas').orderBy('criadoEm','asc').get();
-  var promH=db.collection('historico').orderBy('criadoEm','asc').get();
-  Promise.all([promR,promD,promH]).then(function(results){
-    receitas=results[0].docs.map(function(d){var data=d.data();data.id=d.id;return data;});
-    despesas=results[1].docs.map(function(d){var data=d.data();data.id=d.id;return data;});
-    historico=results[2].docs.map(function(d){var data=d.data();data.id=d.id;return data;});
-    atualizarCategorias(despesas);
-    renderReceitas();renderDespesas();renderHome();setSynced(true);
-  }).catch(function(err){
-    console.error('Erro ao carregar:', err);
+// Timeout de segurança: se em 8s nada carregou, mostra erro
+var _carregouDados=false;
+setTimeout(function(){
+  if(!_carregouDados){
     setSynced(false);
-    document.getElementById('home-summary').innerHTML='<div style="text-align:center;padding:2rem;color:#a32d2d;font-size:13px;">⚠️ Erro ao conectar com o banco.<br><small>'+err.message+'</small><br><br><button onclick="carregarTudo()" style="margin-top:8px;padding:8px 16px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;">Tentar novamente</button></div>';
-  });
-}
+    document.getElementById('home-summary').innerHTML='<div style="text-align:center;padding:2rem;color:#a32d2d;font-size:13px;">⚠️ Tempo esgotado ao conectar.<br><small>Verifique sua conexão ou as regras do Firestore.</small><br><br><button onclick="location.reload()" style="margin-top:8px;padding:8px 16px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;">Recarregar</button></div>';
+  }
+},8000);
 
-// Listeners em tempo real para atualizar após mudanças
-db.collection('receitas').orderBy('criadoEm','asc').onSnapshot(function(snap){
+// Listeners em tempo real
+db.collection('receitas').onSnapshot(function(snap){
   receitas=snap.docs.map(function(d){var data=d.data();data.id=d.id;return data;});
+  receitas.sort(function(a,b){var ta=a.criadoEm?a.criadoEm.seconds:0,tb=b.criadoEm?b.criadoEm.seconds:0;return ta-tb;});
+  _carregouDados=true;
   renderReceitas();renderHome();setSynced(true);
 },function(err){console.error('receitas:',err);setSynced(false);});
 
-db.collection('despesas').orderBy('criadoEm','asc').onSnapshot(function(snap){
+db.collection('despesas').onSnapshot(function(snap){
   despesas=snap.docs.map(function(d){var data=d.data();data.id=d.id;return data;});
+  despesas.sort(function(a,b){var ta=a.criadoEm?a.criadoEm.seconds:0,tb=b.criadoEm?b.criadoEm.seconds:0;return ta-tb;});
+  _carregouDados=true;
   atualizarCategorias(despesas);
   renderDespesas();renderHome();setSynced(true);
 },function(err){console.error('despesas:',err);setSynced(false);});
 
-db.collection('historico').orderBy('criadoEm','asc').onSnapshot(function(snap){
+db.collection('historico').onSnapshot(function(snap){
   historico=snap.docs.map(function(d){var data=d.data();data.id=d.id;return data;});
+  historico.sort(function(a,b){var ta=a.criadoEm?a.criadoEm.seconds:0,tb=b.criadoEm?b.criadoEm.seconds:0;return ta-tb;});
+  _carregouDados=true;
   renderReceitas();renderDespesas();renderHome();setSynced(true);
 },function(err){console.error('historico:',err);setSynced(false);});
-
-carregarTudo();
 </script>
 </body>
 </html>
