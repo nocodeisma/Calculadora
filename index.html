@@ -976,7 +976,7 @@ function enviarWhatsApp(msg){
 }
 
 // Firebase listeners
-db.collection('config').doc('meta').onSnapshot(function(doc){
+db.collection('config').doc('meta').get().then(function(doc){
   if(doc.exists){
     var d=doc.data();
     if(d.meta) document.getElementById('r-meta').value=d.meta;
@@ -984,26 +984,44 @@ db.collection('config').doc('meta').onSnapshot(function(doc){
     if(d.metaMes&&document.getElementById('meta-mes')) document.getElementById('meta-mes').value=d.metaMes;
     updateMeta();
   }
-},function(){});
+}).catch(function(){});
 
+// Carrega tudo de uma vez via get() para evitar problemas de índice com onSnapshot+orderBy
+function carregarTudo(){
+  var promR=db.collection('receitas').orderBy('criadoEm','asc').get();
+  var promD=db.collection('despesas').orderBy('criadoEm','asc').get();
+  var promH=db.collection('historico').orderBy('criadoEm','asc').get();
+  Promise.all([promR,promD,promH]).then(function(results){
+    receitas=results[0].docs.map(function(d){var data=d.data();data.id=d.id;return data;});
+    despesas=results[1].docs.map(function(d){var data=d.data();data.id=d.id;return data;});
+    historico=results[2].docs.map(function(d){var data=d.data();data.id=d.id;return data;});
+    atualizarCategorias(despesas);
+    renderReceitas();renderDespesas();renderHome();setSynced(true);
+  }).catch(function(err){
+    console.error('Erro ao carregar:', err);
+    setSynced(false);
+    document.getElementById('home-summary').innerHTML='<div style="text-align:center;padding:2rem;color:#a32d2d;font-size:13px;">⚠️ Erro ao conectar com o banco.<br><small>'+err.message+'</small><br><br><button onclick="carregarTudo()" style="margin-top:8px;padding:8px 16px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;">Tentar novamente</button></div>';
+  });
+}
+
+// Listeners em tempo real para atualizar após mudanças
 db.collection('receitas').orderBy('criadoEm','asc').onSnapshot(function(snap){
   receitas=snap.docs.map(function(d){var data=d.data();data.id=d.id;return data;});
   renderReceitas();renderHome();setSynced(true);
-},function(){setSynced(false);});
+},function(err){console.error('receitas:',err);setSynced(false);});
 
 db.collection('despesas').orderBy('criadoEm','asc').onSnapshot(function(snap){
   despesas=snap.docs.map(function(d){var data=d.data();data.id=d.id;return data;});
   atualizarCategorias(despesas);
   renderDespesas();renderHome();setSynced(true);
-},function(){setSynced(false);});
+},function(err){console.error('despesas:',err);setSynced(false);});
 
 db.collection('historico').orderBy('criadoEm','asc').onSnapshot(function(snap){
   historico=snap.docs.map(function(d){var data=d.data();data.id=d.id;return data;});
-  renderReceitas();
-  renderDespesas();
-  renderHome();
-  setSynced(true);
-},function(){setSynced(false);});
+  renderReceitas();renderDespesas();renderHome();setSynced(true);
+},function(err){console.error('historico:',err);setSynced(false);});
+
+carregarTudo();
 </script>
 </body>
 </html>
