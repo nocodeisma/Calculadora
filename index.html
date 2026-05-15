@@ -344,6 +344,12 @@ document.addEventListener('click',function(e){
   var hdr=e.target.closest('[data-catkey]');
   if(hdr){var key=hdr.getAttribute('data-catkey');if(key)toggleCat(key);}
 
+  var brea=e.target.closest('[data-reabrir]');
+  if(brea){e.stopPropagation();var rid=brea.getAttribute('data-reabrir');var rtipo=brea.getAttribute('data-tipo');var rmes=brea.getAttribute('data-mes');var rano=brea.getAttribute('data-ano');if(rid)reabrirMes(rid,rtipo,rmes,rano);return;}
+
+  var brem=e.target.closest('[data-remover]');
+  if(brem){e.stopPropagation();var remid=brem.getAttribute('data-remover');if(remid)removeHistorico(remid);return;}
+
   var rdel=e.target.closest('[data-rid]');
   if(rdel){e.stopPropagation();var rid=rdel.getAttribute('data-rid');if(rid)removeReceita(rid);return;}
 
@@ -793,7 +799,7 @@ function renderHistorico(){
         recHtml+='<div style="background:#f0f6ff;border-radius:8px;padding:8px 12px;margin-bottom:6px;">';
         (h.itens||[]).forEach(function(i){recHtml+='<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid #dce8f8;"><span>'+i.desc+'</span><span style="font-weight:500;color:#185FA5">'+fmt(i.valor)+'</span></div>';});
         recHtml+='<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#185FA5;padding-top:6px;"><span>Total</span><span>'+fmt(h.total)+'</span></div>';
-        recHtml+='<div style="display:flex;gap:8px;margin-top:8px;"><button class="hist-del" style="color:#185FA5;border-color:#185FA5;" onclick="reabrirMes(\''+h.id+'\',\'receita\',\''+h.mes+'\',\''+h.ano+'\')">↩ Reabrir</button><button class="hist-del" onclick="removeHistorico(\''+h.id+'\')" >Remover</button></div></div>';
+        recHtml+='<div style="display:flex;gap:8px;margin-top:8px;"><button class="hist-del" style="color:#185FA5;border-color:#185FA5;" data-reabrir="'+h.id+'" data-tipo="receita" data-mes="'+h.mes+'" data-ano="'+h.ano+'">↩ Reabrir</button><button class="hist-del" data-remover="'+h.id+'">Remover</button></div></div>';
       });
     }
     var despHtml='';
@@ -806,7 +812,7 @@ function renderHistorico(){
           despHtml+='<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid #f5dada;"><span>'+i.desc+(ce?'<span style="font-size:10px;color:#999;margin-left:6px;">'+ce+'</span>':'')+'</span><span style="font-weight:500;color:#a32d2d">'+fmt(i.valor)+'</span></div>';
         });
         despHtml+='<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#a32d2d;padding-top:6px;"><span>Total</span><span>'+fmt(h.total)+'</span></div>';
-        despHtml+='<div style="display:flex;gap:8px;margin-top:8px;"><button class="hist-del" style="color:#e05c00;border-color:#e05c00;" onclick="reabrirMes(\''+h.id+'\',\'despesa\',\''+h.mes+'\',\''+h.ano+'\')">↩ Reabrir</button><button class="hist-del" onclick="removeHistorico(\''+h.id+'\')" >Remover</button></div></div>';
+        despHtml+='<div style="display:flex;gap:8px;margin-top:8px;"><button class="hist-del" style="color:#e05c00;border-color:#e05c00;" data-reabrir="'+h.id+'" data-tipo="despesa" data-mes="'+h.mes+'" data-ano="'+h.ano+'">↩ Reabrir</button><button class="hist-del" data-remover="'+h.id+'">Remover</button></div></div>';
       });
     }
     return'<div style="background:#fff;border-radius:12px;border:1px solid #e5e5e5;margin-bottom:10px;overflow:hidden;">'
