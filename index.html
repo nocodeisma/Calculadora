@@ -488,6 +488,14 @@ function removeHistorico(id){
   db.collection('historico').doc(id).delete().then(function(){setSynced(true);renderHistorico();}).catch(function(){setSynced(false);});
 }
 
+function reabrirMes(id, tipo, mes, ano){
+  var label=tipo==='receita'?'receitas':'despesas';
+  if(!confirm('Reabrir '+label+' de '+mes+' '+ano+'? O mês voltará para a aba de '+label+'.'))return;
+  db.collection('historico').doc(id).delete()
+    .then(function(){setSynced(true);renderHistorico();alert(label.charAt(0).toUpperCase()+label.slice(1)+' de '+mes+' '+ano+' reaberto(s) com sucesso!');})
+    .catch(function(){setSynced(false);alert('Erro ao reabrir.');});
+}
+
 function abrirModal(tipo){
   modalTipo=tipo;
   document.getElementById('modal-title').textContent=tipo==='receita'?'Fechar mês — Receitas':'Fechar mês — Despesas';
@@ -529,12 +537,12 @@ function renderReceitas(){
   var MLIST=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   var grupos={},ordemGrupos=[];
   receitas.forEach(function(p){
-    var k=(p.mes||'Sem mês')+'|'+(p.ano||'');
+    var k=(p.mes||'Sem mês')+'|'+String(p.ano||'');
     if(!grupos[k]){grupos[k]={mes:p.mes||'Sem mês',ano:p.ano||'',d16:[],d25:[]};ordemGrupos.push(k);}
     if(p.date===25) grupos[k].d25.push(p); else grupos[k].d16.push(p);
   });
   var mesesFechadosR={};
-  historico.forEach(function(h){if(h.tipo==='receita') mesesFechadosR[h.mes+'|'+h.ano]=true;});
+  historico.forEach(function(h){if(h.tipo==='receita') mesesFechadosR[h.mes+'|'+String(h.ano)]=true;});
   ordemGrupos=ordemGrupos.filter(function(k){return !mesesFechadosR[k];});
   ordemGrupos.sort(function(a,b){
     var ga=grupos[a],gb=grupos[b];
@@ -591,9 +599,27 @@ function renderDespesas(){
   var el=document.getElementById('d-list');
   var wrap=document.getElementById('d-fechar-wrap');
   if(!despesas.length){el.innerHTML='<div class="empty">Nenhuma despesa adicionada.</div>';wrap.classList.add('hidden');return;}
-  wrap.classList.remove('hidden');
   var MLIST=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  var total=despesas.reduce(function(a,p){return a+p.valor;},0);
+
+  // Meses ja fechados no historico
+  var mesesFechadosCheck={};
+  historico.forEach(function(h){if(h.tipo==='despesa') mesesFechadosCheck[h.mes+'|'+String(h.ano)]=true;});
+
+  // Despesas de meses ainda abertos
+  var despesasAbertas=despesas.filter(function(p){
+    var k=(p.mes||'Sem mes')+'|'+String(p.ano||'');
+    return !mesesFechadosCheck[k];
+  });
+
+  // Se tudo fechado, mostrar mensagem limpa
+  if(!despesasAbertas.length){
+    el.innerHTML='<div style="text-align:center;padding:2rem;background:#fff;border-radius:12px;border:1px solid #e5e5e5;"><div style="font-size:22px;margin-bottom:8px;">\u2705</div><div style="font-size:13px;font-weight:500;color:#2d7a2d;">Todos os meses foram fechados</div><div style="font-size:11px;color:#bbb;margin-top:4px;">Adicione novas despesas ou consulte o Hist\u00f3rico.</div></div>';
+    wrap.classList.add('hidden');
+    return;
+  }
+
+  wrap.classList.remove('hidden');
+  var total=despesasAbertas.reduce(function(a,p){return a+p.valor;},0);
 
   function itemHtml(p){
     var cat=getCat(p);
@@ -627,14 +653,11 @@ function renderDespesas(){
 
   if(viewMode==='dia'){
     var grupos={},ordemGrupos=[];
-    despesas.forEach(function(p){
-      var k=(p.mes||'Sem mês')+'|'+(p.ano||'');
+    despesasAbertas.forEach(function(p){
+      var k=(p.mes||'Sem mês')+'|'+String(p.ano||'');
       if(!grupos[k]){grupos[k]={mes:p.mes||'Sem mês',ano:p.ano||'',d16:[],d25:[]};ordemGrupos.push(k);}
       if(p.date===25) grupos[k].d25.push(p); else grupos[k].d16.push(p);
     });
-    var mesesFechadosD={};
-    historico.forEach(function(h){if(h.tipo==='despesa') mesesFechadosD[h.mes+'|'+h.ano]=true;});
-    ordemGrupos=ordemGrupos.filter(function(k){return !mesesFechadosD[k];});
     ordemGrupos.sort(function(a,b){
       var ga=grupos[a],gb=grupos[b];
       return (parseInt(ga.ano||0)*12+MLIST.indexOf(ga.mes))-(parseInt(gb.ano||0)*12+MLIST.indexOf(gb.mes));
@@ -668,16 +691,13 @@ function renderDespesas(){
     });
   } else {
     var mGrupos={},mOrdem=[];
-    despesas.forEach(function(p){
-      var mk2=(p.mes||'Sem mês')+'|'+(p.ano||'');
+    despesasAbertas.forEach(function(p){
+      var mk2=(p.mes||'Sem mês')+'|'+String(p.ano||'');
       if(!mGrupos[mk2]){mGrupos[mk2]={mes:p.mes||'Sem mês',ano:p.ano||'',cats:{}};mOrdem.push(mk2);}
       var cat=getCat(p);
       if(!mGrupos[mk2].cats[cat]) mGrupos[mk2].cats[cat]=[];
       mGrupos[mk2].cats[cat].push(p);
     });
-    var mesesFechadosD2={};
-    historico.forEach(function(h){if(h.tipo==='despesa') mesesFechadosD2[h.mes+'|'+h.ano]=true;});
-    mOrdem=mOrdem.filter(function(k){return !mesesFechadosD2[k];});
     mOrdem.sort(function(a,b){
       var ga=mGrupos[a],gb=mGrupos[b];
       return (parseInt(ga.ano||0)*12+MLIST.indexOf(ga.mes))-(parseInt(gb.ano||0)*12+MLIST.indexOf(gb.mes));
@@ -773,7 +793,7 @@ function renderHistorico(){
         recHtml+='<div style="background:#f0f6ff;border-radius:8px;padding:8px 12px;margin-bottom:6px;">';
         (h.itens||[]).forEach(function(i){recHtml+='<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid #dce8f8;"><span>'+i.desc+'</span><span style="font-weight:500;color:#185FA5">'+fmt(i.valor)+'</span></div>';});
         recHtml+='<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#185FA5;padding-top:6px;"><span>Total</span><span>'+fmt(h.total)+'</span></div>';
-        recHtml+='<button class="hist-del" onclick="removeHistorico(\''+h.id+'\')">Remover</button></div>';
+        recHtml+='<div style="display:flex;gap:8px;margin-top:8px;"><button class="hist-del" style="color:#185FA5;border-color:#185FA5;" onclick="reabrirMes(\''+h.id+'\',\'receita\',\''+h.mes+'\',\''+h.ano+'\')">↩ Reabrir</button><button class="hist-del" onclick="removeHistorico(\''+h.id+'\')">Remover</button></div></div>\';
       });
     }
     var despHtml='';
@@ -786,7 +806,7 @@ function renderHistorico(){
           despHtml+='<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid #f5dada;"><span>'+i.desc+(ce?'<span style="font-size:10px;color:#999;margin-left:6px;">'+ce+'</span>':'')+'</span><span style="font-weight:500;color:#a32d2d">'+fmt(i.valor)+'</span></div>';
         });
         despHtml+='<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#a32d2d;padding-top:6px;"><span>Total</span><span>'+fmt(h.total)+'</span></div>';
-        despHtml+='<button class="hist-del" onclick="removeHistorico(\''+h.id+'\')">Remover</button></div>';
+        despHtml+='<div style="display:flex;gap:8px;margin-top:8px;"><button class="hist-del" style="color:#e05c00;border-color:#e05c00;" onclick="reabrirMes(\''+h.id+'\',\'despesa\',\''+h.mes+'\',\''+h.ano+'\')">↩ Reabrir</button><button class="hist-del" onclick="removeHistorico(\''+h.id+'\')">Remover</button></div></div>\';
       });
     }
     return'<div style="background:#fff;border-radius:12px;border:1px solid #e5e5e5;margin-bottom:10px;overflow:hidden;">'
@@ -851,12 +871,12 @@ function renderHome(){
   var hoje=new Date(),anoAtual=hoje.getFullYear(),mesAtual=hoje.getMonth();
   var meses={};
   receitas.forEach(function(p){
-    var k=(p.mes||'Sem mês')+'|'+(p.ano||'');
+    var k=(p.mes||'Sem mês')+'|'+String(p.ano||'');
     if(!meses[k])meses[k]={mes:p.mes||'Sem mês',ano:p.ano||'',r:0,d:0,r16:0,r25:0,d16:0,d25:0};
     meses[k].r+=p.sub; if(p.date===16)meses[k].r16+=p.sub;else meses[k].r25+=p.sub;
   });
   despesas.forEach(function(p){
-    var k=(p.mes||'Sem mês')+'|'+(p.ano||'');
+    var k=(p.mes||'Sem mês')+'|'+String(p.ano||'');
     if(!meses[k])meses[k]={mes:p.mes||'Sem mês',ano:p.ano||'',r:0,d:0,r16:0,r25:0,d16:0,d25:0};
     meses[k].d+=p.valor; if(p.date===16)meses[k].d16+=p.valor;else meses[k].d25+=p.valor;
   });
