@@ -401,6 +401,8 @@ function usarRecorrente(tipo, desc, cat, taxa, horas, dias, date){
 }
 
 // ── NOVO: Renderizar sugestões ──
+function escAttr(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
 function renderSugestoes(){
   try{
   // Sugestões para RECEITAS
@@ -426,8 +428,15 @@ function renderSugestoes(){
     
     var rSugHtml='';
     rLastByDesc.forEach(function(p){
-      rSugHtml+='<button class="suggestion-btn" type="button" onclick="usarRecorrente(\'receita\',\''+p.desc.replace(/'/g,"\\'")+"','',"+(p.taxa||0)+','+(p.horas||0)+','+(p.dias||0)+','+p.date+')"+'>'
-        +'<span class="suggestion-name">'+p.desc+'</span>'
+      rSugHtml+='<button class="suggestion-btn" type="button"'
+        +' data-sug-tipo="receita"'
+        +' data-sug-desc="'+escAttr(p.desc)+'"'
+        +' data-sug-cat=""'
+        +' data-sug-taxa="'+(p.taxa||0)+'"'
+        +' data-sug-horas="'+(p.horas||0)+'"'
+        +' data-sug-dias="'+(p.dias||0)+'"'
+        +' data-sug-date="'+p.date+'">'
+        +'<span class="suggestion-name">'+escAttr(p.desc)+'</span>'
         +'<span class="suggestion-meta">R$'+p.taxa.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h</span>'
         +'<span class="suggestion-val">'+fmt(p.sub)+'</span>'
         +'</button>';
@@ -467,8 +476,15 @@ function renderSugestoes(){
     var dSugHtml='';
     dLastByDesc.forEach(function(p){
       var cat=getCat(p);
-      dSugHtml+='<button class="suggestion-btn" type="button" onclick="usarRecorrente(\'despesa\',\''+p.desc.replace(/'/g,"\\'")+"','"+cat.replace(/'/g,"\\'")+"',0,0,0,"+p.date+')"+'>'
-        +'<span class="suggestion-name">'+p.desc+'</span>'
+      dSugHtml+='<button class="suggestion-btn" type="button"'
+        +' data-sug-tipo="despesa"'
+        +' data-sug-desc="'+escAttr(p.desc)+'"'
+        +' data-sug-cat="'+escAttr(cat)+'"'
+        +' data-sug-taxa="0"'
+        +' data-sug-horas="0"'
+        +' data-sug-dias="0"'
+        +' data-sug-date="'+p.date+'">'
+        +'<span class="suggestion-name">'+escAttr(p.desc)+'</span>'
         +'<span class="suggestion-meta">'+CATS_EMOJI[cat]+' '+cat+'</span>'
         +'<span class="suggestion-val">'+fmt(p.valor)+'</span>'
         +'</button>';
@@ -488,6 +504,19 @@ function renderSugestoes(){
 
 // Event delegation
 document.addEventListener('click',function(e){
+  var bsug=e.target.closest('[data-sug-tipo]');
+  if(bsug){
+    var sTipo=bsug.getAttribute('data-sug-tipo');
+    var sDesc=bsug.getAttribute('data-sug-desc');
+    var sCat=bsug.getAttribute('data-sug-cat');
+    var sTaxa=parseFloat(bsug.getAttribute('data-sug-taxa'))||0;
+    var sHoras=parseFloat(bsug.getAttribute('data-sug-horas'))||0;
+    var sDias=parseInt(bsug.getAttribute('data-sug-dias'))||0;
+    var sDate=parseInt(bsug.getAttribute('data-sug-date'))||16;
+    usarRecorrente(sTipo,sDesc,sCat,sTaxa,sHoras,sDias,sDate);
+    return;
+  }
+
   var btnp=e.target.closest('[data-pid]');
   if(btnp){
     e.stopPropagation();
