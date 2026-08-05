@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- build:20260515b -->
+<!-- build:20260515c - MELHORADO COM ITENS RECORRENTES -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
-<title>Finanças v14</title>
+<title>Finanças v14+</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
@@ -106,6 +106,42 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
 .cat-bar-bg{flex:1;height:8px;background:#f0f0ee;border-radius:99px;overflow:hidden;}
 .cat-bar-fill{height:100%;border-radius:99px;}
 .cat-bar-val{font-size:11px;color:#888;min-width:80px;text-align:right;}
+
+/* ── ESTILOS NOVOS PARA RECORRENTES ── */
+.sugestoes-wrap{background:#f0f6ff;border-radius:12px;padding:12px;margin-bottom:12px;border:1px solid #dce8f8;}
+.sugestoes-title{font-size:11px;font-weight:600;color:#0d47a1;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.sugestoes-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.suggestion-btn{
+  background:#fff;border:1px solid #b3d9ff;border-radius:8px;padding:8px;font-size:11px;cursor:pointer;
+  text-align:left;transition:all 0.2s;font-family:inherit;color:#1a1a1a;
+}
+.suggestion-btn:hover{background:#e3f2fd;border-color:#64b5f6;transform:translateY(-1px);}
+.suggestion-btn:active{transform:translateY(0);}
+.suggestion-name{font-weight:500;font-size:12px;display:block;margin-bottom:2px;}
+.suggestion-meta{font-size:10px;color:#666;}
+.suggestion-val{font-weight:500;color:#185FA5;font-size:11px;margin-top:2px;}
+
+.favorito-badge{display:inline-block;background:#ffd700;color:#b8860b;font-size:9px;padding:2px 6px;border-radius:99px;margin-left:4px;font-weight:600;}
+
+.recorrentes-list{background:#f5f5f3;border-radius:10px;padding:10px;margin-bottom:12px;}
+.recorrentes-item{
+  background:#fff;border-radius:8px;padding:8px 10px;margin-bottom:6px;display:flex;
+  justify-content:space-between;align-items:center;gap:8px;border:1px solid #e5e5e5;
+}
+.recorrentes-item-info{flex:1;min-width:0;}
+.recorrentes-item-desc{font-size:12px;font-weight:500;margin-bottom:2px;}
+.recorrentes-item-meta{font-size:10px;color:#888;}
+.recorrentes-item-val{font-size:11px;color:#666;}
+.btn-usar{background:#185FA5;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:500;white-space:nowrap;}
+.btn-usar:hover{background:#0d47a1;}
+.btn-usar:active{opacity:0.9;}
+
+.tabs-recorrentes{display:flex;gap:8px;margin-bottom:12px;}
+.tab-btn{
+  background:#f5f5f3;border:1px solid #ddd;border-radius:8px;padding:7px 12px;font-size:12px;
+  cursor:pointer;font-family:inherit;color:#888;transition:all 0.2s;
+}
+.tab-btn.active{background:#185FA5;color:#fff;border-color:#185FA5;}
 </style>
 </head>
 <body>
@@ -165,6 +201,13 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
 
 <div id="page-receita" class="section hidden">
   <div style="height:1rem"></div>
+  
+  <!-- SUGESTÕES DE RECORRENTES -->
+  <div id="r-sugestoes-wrap" class="sugestoes-wrap hidden">
+    <div class="sugestoes-title">⚡ Usar última receita</div>
+    <div class="sugestoes-grid" id="r-sugestoes-grid"></div>
+  </div>
+
   <div class="fcard">
     <div class="ftitle">Novo projeto</div>
     <div class="field"><label>Descrição</label><input type="text" id="r-desc" placeholder="Ex: Desenvolvimento site XYZ"/></div>
@@ -199,6 +242,13 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
 
 <div id="page-despesa" class="section hidden">
   <div style="height:1rem"></div>
+
+  <!-- SUGESTÕES DE RECORRENTES -->
+  <div id="d-sugestoes-wrap" class="sugestoes-wrap hidden">
+    <div class="sugestoes-title">⚡ Usar última despesa</div>
+    <div class="sugestoes-grid" id="d-sugestoes-grid"></div>
+  </div>
+
   <div class="fcard">
     <div class="ftitle">Nova despesa</div>
     <div class="field"><label>Descrição</label><input type="text" id="d-desc" placeholder="Ex: Aluguel, Conta de luz..."/></div>
@@ -322,16 +372,110 @@ function toggleCat(key){
   if(arr){arr.textContent=window.catOpen[key]?'▲':'▼';}
 }
 
-// ── FIX: togglePaga definida ──
 function togglePaga(id, paga){
   db.collection('despesas').doc(id).update({paga: !paga})
     .then(function(){setSynced(true);})
     .catch(function(){setSynced(false);});
 }
 
+// ── NOVO: Carregar dados de recorrente ──
+function usarRecorrente(tipo, desc, cat, taxa, horas, dias, date){
+  if(tipo==='despesa'){
+    document.getElementById('d-desc').value=desc;
+    document.getElementById('d-cat').value=cat;
+    document.getElementById('d-valor').focus();
+    dDate=date;
+    document.getElementById('d-btn16').className='dbtn dbtn-16'+(date===16?' sel':'');
+    document.getElementById('d-btn25').className='dbtn dbtn-25'+(date===25?' sel':'');
+  }else{
+    document.getElementById('r-desc').value=desc;
+    document.getElementById('r-taxa').value=taxa;
+    document.getElementById('r-horas').value=horas;
+    document.getElementById('r-dias').value=dias;
+    recalcPreview();
+    rDate=date;
+    document.getElementById('r-btn16').className='dbtn dbtn-16'+(date===16?' sel':'');
+    document.getElementById('r-btn25').className='dbtn dbtn-25'+(date===25?' sel':'');
+    document.getElementById('r-valor').focus();
+  }
+}
+
+// ── NOVO: Renderizar sugestões ──
+function renderSugestoes(){
+  // Sugestões para RECEITAS
+  var rPorDesc={};
+  receitas.forEach(function(p){
+    if(!rPorDesc[p.desc]) rPorDesc[p.desc]=[];
+    rPorDesc[p.desc].push(p);
+  });
+  var rLastByDesc=[];
+  Object.keys(rPorDesc).forEach(function(desc){
+    var ultimas=rPorDesc[desc].sort(function(a,b){
+      var ta=a.criadoEm?a.criadoEm.seconds:0, tb=b.criadoEm?b.criadoEm.seconds:0;
+      return tb-ta;
+    });
+    if(ultimas.length) rLastByDesc.push(ultimas[0]);
+  });
+  rLastByDesc.sort(function(a,b){
+    var ta=a.criadoEm?a.criadoEm.seconds:0, tb=b.criadoEm?b.criadoEm.seconds:0;
+    return tb-ta;
+  }).slice(0,4);
+  
+  var rSugHtml='';
+  rLastByDesc.forEach(function(p){
+    rSugHtml+='<button class="suggestion-btn" type="button" onclick="usarRecorrente(\'receita\',\''+p.desc.replace(/'/g,"\\'")+"','',"+(p.taxa||0)+','+(p.horas||0)+','+(p.dias||0)+','+p.date+')"+'>'
+      +'<span class="suggestion-name">'+p.desc+'</span>'
+      +'<span class="suggestion-meta">R$'+p.taxa.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h</span>'
+      +'<span class="suggestion-val">'+fmt(p.sub)+'</span>'
+      +'</button>';
+  });
+  var rWrap=document.getElementById('r-sugestoes-wrap');
+  if(rSugHtml){
+    document.getElementById('r-sugestoes-grid').innerHTML=rSugHtml;
+    rWrap.classList.remove('hidden');
+  }else{
+    rWrap.classList.add('hidden');
+  }
+
+  // Sugestões para DESPESAS
+  var dPorDesc={};
+  despesas.forEach(function(p){
+    if(!dPorDesc[p.desc]) dPorDesc[p.desc]=[];
+    dPorDesc[p.desc].push(p);
+  });
+  var dLastByDesc=[];
+  Object.keys(dPorDesc).forEach(function(desc){
+    var ultimas=dPorDesc[desc].sort(function(a,b){
+      var ta=a.criadoEm?a.criadoEm.seconds:0, tb=b.criadoEm?b.criadoEm.seconds:0;
+      return tb-ta;
+    });
+    if(ultimas.length) dLastByDesc.push(ultimas[0]);
+  });
+  dLastByDesc.sort(function(a,b){
+    var ta=a.criadoEm?a.criadoEm.seconds:0, tb=b.criadoEm?b.criadoEm.seconds:0;
+    return tb-ta;
+  }).slice(0,4);
+
+  var dSugHtml='';
+  dLastByDesc.forEach(function(p){
+    var cat=getCat(p);
+    dSugHtml+='<button class="suggestion-btn" type="button" onclick="usarRecorrente(\'despesa\',\''+p.desc.replace(/'/g,"\\'")+"','"+cat.replace(/'/g,"\\'")+"',0,0,0,"+p.date+')"+'>'
+      +'<span class="suggestion-name">'+p.desc+'</span>'
+      +'<span class="suggestion-meta">'+CATS_EMOJI[cat]+' '+cat+'</span>'
+      +'<span class="suggestion-val">'+fmt(p.valor)+'</span>'
+      +'</button>';
+  });
+  var dWrap=document.getElementById('d-sugestoes-wrap');
+  if(dSugHtml){
+    document.getElementById('d-sugestoes-grid').innerHTML=dSugHtml;
+    dWrap.classList.remove('hidden');
+  }else{
+    dWrap.classList.add('hidden');
+  }
+}
+
 // Event delegation
 document.addEventListener('click',function(e){
-  // ── FIX: botão Pagar com stopPropagation para não colapsar mês pai ──
   var btnp=e.target.closest('[data-pid]');
   if(btnp){
     e.stopPropagation();
@@ -359,7 +503,6 @@ document.addEventListener('click',function(e){
   var bmk=e.target.closest('[data-meskey]');
   if(bmk){var mk=bmk.getAttribute('data-meskey');if(mk)toggleMesHome(mk);}
 
-  // Toggle mês receitas
   var brm=e.target.closest('[data-rmes]');
   if(brm){
     var rmk=brm.getAttribute('data-rmes');
@@ -370,7 +513,6 @@ document.addEventListener('click',function(e){
     if(ra) ra.textContent=window.rMesOpen[rmk]===false?'▼':'▲';
   }
 
-  // Toggle mês despesas
   var bdm=e.target.closest('[data-dmes]');
   if(bdm){
     var dmk=bdm.getAttribute('data-dmes');
@@ -390,6 +532,7 @@ function goTo(page){
   document.getElementById('nav-title').textContent=titles[page];
   if(page==='home'){back.classList.add('hidden');renderHome();}
   else{back.classList.remove('hidden');}
+  if(page==='receita'||page==='despesa') renderSugestoes();
   if(page==='historico') renderHistorico();
 }
 
@@ -463,6 +606,7 @@ function addReceita(){
     ['r-desc','r-taxa','r-horas','r-dias'].forEach(function(id){document.getElementById(id).value='';});
     document.getElementById('r-preview').textContent='R$ 0,00';
     document.getElementById('r-desc').focus();setSynced(true);
+    renderSugestoes();
   }).catch(function(e){setSynced(false);alert('Erro: '+e.message);})
   .finally(function(){btn.disabled=false;});
 }
@@ -482,13 +626,14 @@ function addDespesa(){
     ['d-desc','d-valor'].forEach(function(id){document.getElementById(id).value='';});
     document.getElementById('d-cat').value='';
     document.getElementById('d-desc').focus();setSynced(true);
+    renderSugestoes();
     enviarWhatsApp('Nova despesa cadastrada: '+cat+', '+desc+' — '+fmt(valor)+(mes?' ('+mes+(ano?' '+ano:'')+'）':''));
   }).catch(function(e){setSynced(false);alert('Erro: '+e.message);})
   .finally(function(){btn.disabled=false;});
 }
 
-function removeReceita(id){db.collection('receitas').doc(id).delete().then(function(){setSynced(true);}).catch(function(){setSynced(false);});}
-function removeDespesa(id){db.collection('despesas').doc(id).delete().then(function(){setSynced(true);}).catch(function(){setSynced(false);});}
+function removeReceita(id){db.collection('receitas').doc(id).delete().then(function(){setSynced(true);renderSugestoes();}).catch(function(){setSynced(false);});}
+function removeDespesa(id){db.collection('despesas').doc(id).delete().then(function(){setSynced(true);renderSugestoes();}).catch(function(){setSynced(false);});}
 function removeHistorico(id){
   if(!confirm('Remover este mês do histórico?'))return;
   db.collection('historico').doc(id).delete().then(function(){setSynced(true);renderHistorico();}).catch(function(){setSynced(false);});
@@ -607,19 +752,16 @@ function renderDespesas(){
   if(!despesas.length){el.innerHTML='<div class="empty">Nenhuma despesa adicionada.</div>';wrap.classList.add('hidden');return;}
   var MLIST=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-  // Meses ja fechados no historico
   var mesesFechadosCheck={};
   historico.forEach(function(h){if(h.tipo==='despesa') mesesFechadosCheck[h.mes+'|'+String(h.ano)]=true;});
 
-  // Despesas de meses ainda abertos
   var despesasAbertas=despesas.filter(function(p){
     var k=(p.mes||'Sem mes')+'|'+String(p.ano||'');
     return !mesesFechadosCheck[k];
   });
 
-  // Se tudo fechado, mostrar mensagem limpa
   if(!despesasAbertas.length){
-    el.innerHTML='<div style="text-align:center;padding:2rem;background:#fff;border-radius:12px;border:1px solid #e5e5e5;"><div style="font-size:22px;margin-bottom:8px;">\u2705</div><div style="font-size:13px;font-weight:500;color:#2d7a2d;">Todos os meses foram fechados</div><div style="font-size:11px;color:#bbb;margin-top:4px;">Adicione novas despesas ou consulte o Hist\u00f3rico.</div></div>';
+    el.innerHTML='<div style="text-align:center;padding:2rem;background:#fff;border-radius:12px;border:1px solid #e5e5e5;"><div style="font-size:22px;margin-bottom:8px;">✅</div><div style="font-size:13px;font-weight:500;color:#2d7a2d;">Todos os meses foram fechados</div><div style="font-size:11px;color:#bbb;margin-top:4px;">Adicione novas despesas ou consulte o Histórico.</div></div>';
     wrap.classList.add('hidden');
     return;
   }
@@ -969,7 +1111,6 @@ function toggleAllMeses(){
   if(btn) btn.textContent=toOpen?'⊟ Colapsar tudo':'⊞ Expandir tudo';
 }
 
-// WhatsApp via CallMeBot
 function enviarWhatsApp(msg){
   var contatos=[
     {phone:'554999885727',apikey:'1542451'},
@@ -981,7 +1122,6 @@ function enviarWhatsApp(msg){
   });
 }
 
-// Firebase listeners
 db.collection('config').doc('meta').get().then(function(doc){
   if(doc.exists){
     var d=doc.data();
@@ -992,7 +1132,6 @@ db.collection('config').doc('meta').get().then(function(doc){
   }
 }).catch(function(){});
 
-// Timeout de segurança: se em 8s nada carregou, mostra erro
 var _carregouDados=false;
 setTimeout(function(){
   if(!_carregouDados){
@@ -1001,7 +1140,6 @@ setTimeout(function(){
   }
 },8000);
 
-// Listeners em tempo real
 db.collection('receitas').onSnapshot(function(snap){
   receitas=snap.docs.map(function(d){var data=d.data();data.id=d.id;return data;});
   receitas.sort(function(a,b){var ta=a.criadoEm?a.criadoEm.seconds:0,tb=b.criadoEm?b.criadoEm.seconds:0;return ta-tb;});
