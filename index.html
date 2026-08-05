@@ -378,6 +378,12 @@ function togglePaga(id, paga){
     .catch(function(){setSynced(false);});
 }
 
+function toggleFavorita(id, favorita){
+  db.collection('despesas').doc(id).update({favorita: !favorita})
+    .then(function(){setSynced(true);})
+    .catch(function(){setSynced(false);});
+}
+
 // ── NOVO: Carregar dados de recorrente ──
 function usarRecorrente(tipo, desc, cat, taxa, horas, dias, date){
   if(tipo==='despesa'){
@@ -459,23 +465,31 @@ function renderSugestoes(){
       if(!dPorDesc[p.desc]) dPorDesc[p.desc]=[];
       dPorDesc[p.desc].push(p);
     });
-    var dLastByDesc=[];
+    var dFavList=[], dRecentList=[];
     Object.keys(dPorDesc).forEach(function(desc){
-      var ultimas=dPorDesc[desc].sort(function(a,b){
+      var itens=dPorDesc[desc].slice().sort(function(a,b){
         var ta=a.criadoEm?a.criadoEm.seconds:0, tb=b.criadoEm?b.criadoEm.seconds:0;
         return tb-ta;
       });
-      if(ultimas.length) dLastByDesc.push(ultimas[0]);
+      var maisRecente=itens[0];
+      var isFav=itens.some(function(x){return x.favorita===true;});
+      var rep={id:maisRecente.id,desc:maisRecente.desc,cat:getCat(maisRecente),valor:maisRecente.valor,date:maisRecente.date,criadoEm:maisRecente.criadoEm,favorita:isFav};
+      if(isFav) dFavList.push(rep); else dRecentList.push(rep);
     });
-    dLastByDesc.sort(function(a,b){
+    // Favoritas sempre aparecem, ordenadas alfabeticamente
+    dFavList.sort(function(a,b){return a.desc.localeCompare(b.desc,'pt-BR');});
+    // As demais preenchem o espaço restante, por uso mais recente
+    dRecentList.sort(function(a,b){
       var ta=a.criadoEm?a.criadoEm.seconds:0, tb=b.criadoEm?b.criadoEm.seconds:0;
       return tb-ta;
     });
-    dLastByDesc=dLastByDesc.slice(0,4);
+    var maxTotalD=Math.max(6,dFavList.length);
+    var dLastByDesc=dFavList.concat(dRecentList).slice(0,maxTotalD);
 
     var dSugHtml='';
     dLastByDesc.forEach(function(p){
-      var cat=getCat(p);
+      var cat=p.cat||'Outros';
+      var favBadge=p.favorita?'<span class="favorito-badge">★</span>':'';
       dSugHtml+='<button class="suggestion-btn" type="button"'
         +' data-sug-tipo="despesa"'
         +' data-sug-desc="'+escAttr(p.desc)+'"'
@@ -484,7 +498,7 @@ function renderSugestoes(){
         +' data-sug-horas="0"'
         +' data-sug-dias="0"'
         +' data-sug-date="'+p.date+'">'
-        +'<span class="suggestion-name">'+escAttr(p.desc)+'</span>'
+        +'<span class="suggestion-name">'+escAttr(p.desc)+favBadge+'</span>'
         +'<span class="suggestion-meta">'+CATS_EMOJI[cat]+' '+cat+'</span>'
         +'<span class="suggestion-val">'+fmt(p.valor)+'</span>'
         +'</button>';
@@ -523,6 +537,15 @@ document.addEventListener('click',function(e){
     var pid=btnp.getAttribute('data-pid');
     var pagaAtual=btnp.getAttribute('data-paga')==='true';
     if(pid) togglePaga(pid, pagaAtual);
+    return;
+  }
+
+  var btnfav=e.target.closest('[data-favid]');
+  if(btnfav){
+    e.stopPropagation();
+    var favid=btnfav.getAttribute('data-favid');
+    var favAtual=btnfav.getAttribute('data-fav')==='true';
+    if(favid) toggleFavorita(favid, favAtual);
     return;
   }
 
@@ -815,11 +838,13 @@ function renderDespesas(){
     var catLabel=(CATS_EMOJI[cat]||'📦')+' '+cat;
     var meta2=viewMode==='dia'?catLabel+' · ':'<span style="font-size:10px;font-weight:500;background:#e5e5e5;color:#555;border-radius:99px;padding:1px 7px;margin-right:4px;">dia '+p.date+'</span>';
     var paga=p.paga===true;
+    var fav=p.favorita===true;
     var bgColor=paga?'#f0faf0':'#fff';
     var borderColor=paga?'#c6e6c6':'#f0f0f0';
     var pagaBtn=paga
       ?'<button data-pid="'+p.id+'" data-paga="true" style="background:#2d7a2d;border:none;border-radius:6px;padding:4px 10px;font-size:11px;color:#fff;cursor:pointer;white-space:nowrap;font-family:inherit;">✓ Paga</button>'
       :'<button data-pid="'+p.id+'" data-paga="false" style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px 10px;font-size:11px;color:#888;cursor:pointer;white-space:nowrap;font-family:inherit;">Pagar</button>';
+    var favBtn='<button data-favid="'+p.id+'" data-fav="'+(fav?'true':'false')+'" title="'+(fav?'Remover dos favoritos':'Marcar como favorita')+'" style="background:none;border:none;cursor:pointer;font-size:16px;padding:0 2px;line-height:1;color:'+(fav?'#f5a623':'#ccc')+';">'+(fav?'★':'☆')+'</button>';
     var nomeStyle=paga?'text-decoration:line-through;color:#888;':'';
     return'<div style="background:'+bgColor+';border-bottom:1px solid '+borderColor+';padding:0.9rem 1.1rem;display:flex;align-items:center;justify-content:space-between;gap:10px;">'
       +'<div style="flex:1;min-width:0">'
@@ -827,6 +852,7 @@ function renderDespesas(){
         +'<div class="lmeta">'+meta2+'</div>'
       +'</div>'
       +'<div style="display:flex;align-items:center;gap:6px;">'
+        +favBtn
         +pagaBtn
         +'<span class="lval" style="color:'+(paga?'#2d7a2d':'#a32d2d')+';">'+fmt(p.valor)+'</span>'
         +'<button class="bdel" data-did="'+p.id+'">✕</button>'
