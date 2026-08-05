@@ -402,76 +402,88 @@ function usarRecorrente(tipo, desc, cat, taxa, horas, dias, date){
 
 // ── NOVO: Renderizar sugestões ──
 function renderSugestoes(){
+  try{
   // Sugestões para RECEITAS
   var rPorDesc={};
-  receitas.forEach(function(p){
-    if(!rPorDesc[p.desc]) rPorDesc[p.desc]=[];
-    rPorDesc[p.desc].push(p);
-  });
-  var rLastByDesc=[];
-  Object.keys(rPorDesc).forEach(function(desc){
-    var ultimas=rPorDesc[desc].sort(function(a,b){
+  if(receitas && Array.isArray(receitas)){
+    receitas.forEach(function(p){
+      if(!rPorDesc[p.desc]) rPorDesc[p.desc]=[];
+      rPorDesc[p.desc].push(p);
+    });
+    var rLastByDesc=[];
+    Object.keys(rPorDesc).forEach(function(desc){
+      var ultimas=rPorDesc[desc].sort(function(a,b){
+        var ta=a.criadoEm?a.criadoEm.seconds:0, tb=b.criadoEm?b.criadoEm.seconds:0;
+        return tb-ta;
+      });
+      if(ultimas.length) rLastByDesc.push(ultimas[0]);
+    });
+    rLastByDesc.sort(function(a,b){
       var ta=a.criadoEm?a.criadoEm.seconds:0, tb=b.criadoEm?b.criadoEm.seconds:0;
       return tb-ta;
     });
-    if(ultimas.length) rLastByDesc.push(ultimas[0]);
-  });
-  rLastByDesc.sort(function(a,b){
-    var ta=a.criadoEm?a.criadoEm.seconds:0, tb=b.criadoEm?b.criadoEm.seconds:0;
-    return tb-ta;
-  }).slice(0,4);
-  
-  var rSugHtml='';
-  rLastByDesc.forEach(function(p){
-    rSugHtml+='<button class="suggestion-btn" type="button" onclick="usarRecorrente(\'receita\',\''+p.desc.replace(/'/g,"\\'")+"','',"+(p.taxa||0)+','+(p.horas||0)+','+(p.dias||0)+','+p.date+')"+'>'
-      +'<span class="suggestion-name">'+p.desc+'</span>'
-      +'<span class="suggestion-meta">R$'+p.taxa.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h</span>'
-      +'<span class="suggestion-val">'+fmt(p.sub)+'</span>'
-      +'</button>';
-  });
-  var rWrap=document.getElementById('r-sugestoes-wrap');
-  if(rSugHtml){
-    document.getElementById('r-sugestoes-grid').innerHTML=rSugHtml;
-    rWrap.classList.remove('hidden');
-  }else{
-    rWrap.classList.add('hidden');
+    rLastByDesc=rLastByDesc.slice(0,4);
+    
+    var rSugHtml='';
+    rLastByDesc.forEach(function(p){
+      rSugHtml+='<button class="suggestion-btn" type="button" onclick="usarRecorrente(\'receita\',\''+p.desc.replace(/'/g,"\\'")+"','',"+(p.taxa||0)+','+(p.horas||0)+','+(p.dias||0)+','+p.date+')"+'>'
+        +'<span class="suggestion-name">'+p.desc+'</span>'
+        +'<span class="suggestion-meta">R$'+p.taxa.toLocaleString('pt-BR',{minimumFractionDigits:2})+'/h</span>'
+        +'<span class="suggestion-val">'+fmt(p.sub)+'</span>'
+        +'</button>';
+    });
+    var rWrap=document.getElementById('r-sugestoes-wrap');
+    if(rWrap){
+      if(rSugHtml){
+        document.getElementById('r-sugestoes-grid').innerHTML=rSugHtml;
+        rWrap.classList.remove('hidden');
+      }else{
+        rWrap.classList.add('hidden');
+      }
+    }
   }
 
   // Sugestões para DESPESAS
   var dPorDesc={};
-  despesas.forEach(function(p){
-    if(!dPorDesc[p.desc]) dPorDesc[p.desc]=[];
-    dPorDesc[p.desc].push(p);
-  });
-  var dLastByDesc=[];
-  Object.keys(dPorDesc).forEach(function(desc){
-    var ultimas=dPorDesc[desc].sort(function(a,b){
+  if(despesas && Array.isArray(despesas)){
+    despesas.forEach(function(p){
+      if(!dPorDesc[p.desc]) dPorDesc[p.desc]=[];
+      dPorDesc[p.desc].push(p);
+    });
+    var dLastByDesc=[];
+    Object.keys(dPorDesc).forEach(function(desc){
+      var ultimas=dPorDesc[desc].sort(function(a,b){
+        var ta=a.criadoEm?a.criadoEm.seconds:0, tb=b.criadoEm?b.criadoEm.seconds:0;
+        return tb-ta;
+      });
+      if(ultimas.length) dLastByDesc.push(ultimas[0]);
+    });
+    dLastByDesc.sort(function(a,b){
       var ta=a.criadoEm?a.criadoEm.seconds:0, tb=b.criadoEm?b.criadoEm.seconds:0;
       return tb-ta;
     });
-    if(ultimas.length) dLastByDesc.push(ultimas[0]);
-  });
-  dLastByDesc.sort(function(a,b){
-    var ta=a.criadoEm?a.criadoEm.seconds:0, tb=b.criadoEm?b.criadoEm.seconds:0;
-    return tb-ta;
-  }).slice(0,4);
+    dLastByDesc=dLastByDesc.slice(0,4);
 
-  var dSugHtml='';
-  dLastByDesc.forEach(function(p){
-    var cat=getCat(p);
-    dSugHtml+='<button class="suggestion-btn" type="button" onclick="usarRecorrente(\'despesa\',\''+p.desc.replace(/'/g,"\\'")+"','"+cat.replace(/'/g,"\\'")+"',0,0,0,"+p.date+')"+'>'
-      +'<span class="suggestion-name">'+p.desc+'</span>'
-      +'<span class="suggestion-meta">'+CATS_EMOJI[cat]+' '+cat+'</span>'
-      +'<span class="suggestion-val">'+fmt(p.valor)+'</span>'
-      +'</button>';
-  });
-  var dWrap=document.getElementById('d-sugestoes-wrap');
-  if(dSugHtml){
-    document.getElementById('d-sugestoes-grid').innerHTML=dSugHtml;
-    dWrap.classList.remove('hidden');
-  }else{
-    dWrap.classList.add('hidden');
+    var dSugHtml='';
+    dLastByDesc.forEach(function(p){
+      var cat=getCat(p);
+      dSugHtml+='<button class="suggestion-btn" type="button" onclick="usarRecorrente(\'despesa\',\''+p.desc.replace(/'/g,"\\'")+"','"+cat.replace(/'/g,"\\'")+"',0,0,0,"+p.date+')"+'>'
+        +'<span class="suggestion-name">'+p.desc+'</span>'
+        +'<span class="suggestion-meta">'+CATS_EMOJI[cat]+' '+cat+'</span>'
+        +'<span class="suggestion-val">'+fmt(p.valor)+'</span>'
+        +'</button>';
+    });
+    var dWrap=document.getElementById('d-sugestoes-wrap');
+    if(dWrap){
+      if(dSugHtml){
+        document.getElementById('d-sugestoes-grid').innerHTML=dSugHtml;
+        dWrap.classList.remove('hidden');
+      }else{
+        dWrap.classList.add('hidden');
+      }
+    }
   }
+  }catch(e){console.log('Erro ao renderizar sugestões: '+e.message);}
 }
 
 // Event delegation
@@ -532,6 +544,9 @@ function goTo(page){
   document.getElementById('nav-title').textContent=titles[page];
   if(page==='home'){back.classList.add('hidden');renderHome();}
   else{back.classList.remove('hidden');}
+  if(page==='receita'||page==='despesa'){
+    try{renderSugestoes();}catch(e){console.log('Sugestões: '+e.message);}
+  }
   if(page==='historico') renderHistorico();
 }
 
@@ -1141,7 +1156,7 @@ db.collection('receitas').onSnapshot(function(snap){
   receitas=snap.docs.map(function(d){var data=d.data();data.id=d.id;return data;});
   receitas.sort(function(a,b){var ta=a.criadoEm?a.criadoEm.seconds:0,tb=b.criadoEm?b.criadoEm.seconds:0;return ta-tb;});
   _carregouDados=true;
-  renderReceitas();renderHome();renderSugestoes();setSynced(true);
+  renderReceitas();renderHome();setSynced(true);
 },function(err){console.error('receitas:',err);setSynced(false);});
 
 db.collection('despesas').onSnapshot(function(snap){
@@ -1149,14 +1164,14 @@ db.collection('despesas').onSnapshot(function(snap){
   despesas.sort(function(a,b){var ta=a.criadoEm?a.criadoEm.seconds:0,tb=b.criadoEm?b.criadoEm.seconds:0;return ta-tb;});
   _carregouDados=true;
   atualizarCategorias(despesas);
-  renderDespesas();renderHome();renderSugestoes();setSynced(true);
+  renderDespesas();renderHome();setSynced(true);
 },function(err){console.error('despesas:',err);setSynced(false);});
 
 db.collection('historico').onSnapshot(function(snap){
   historico=snap.docs.map(function(d){var data=d.data();data.id=d.id;return data;});
   historico.sort(function(a,b){var ta=a.criadoEm?a.criadoEm.seconds:0,tb=b.criadoEm?b.criadoEm.seconds:0;return ta-tb;});
   _carregouDados=true;
-  renderReceitas();renderDespesas();renderHome();renderSugestoes();setSynced(true);
+  renderReceitas();renderDespesas();renderHome();setSynced(true);
 },function(err){console.error('historico:',err);setSynced(false);});
 </script>
 </body>
