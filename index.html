@@ -532,7 +532,6 @@ function goTo(page){
   document.getElementById('nav-title').textContent=titles[page];
   if(page==='home'){back.classList.add('hidden');renderHome();}
   else{back.classList.remove('hidden');}
-  if(page==='receita'||page==='despesa') renderSugestoes();
   if(page==='historico') renderHistorico();
 }
 
@@ -606,7 +605,6 @@ function addReceita(){
     ['r-desc','r-taxa','r-horas','r-dias'].forEach(function(id){document.getElementById(id).value='';});
     document.getElementById('r-preview').textContent='R$ 0,00';
     document.getElementById('r-desc').focus();setSynced(true);
-    renderSugestoes();
   }).catch(function(e){setSynced(false);alert('Erro: '+e.message);})
   .finally(function(){btn.disabled=false;});
 }
@@ -626,14 +624,13 @@ function addDespesa(){
     ['d-desc','d-valor'].forEach(function(id){document.getElementById(id).value='';});
     document.getElementById('d-cat').value='';
     document.getElementById('d-desc').focus();setSynced(true);
-    renderSugestoes();
     enviarWhatsApp('Nova despesa cadastrada: '+cat+', '+desc+' — '+fmt(valor)+(mes?' ('+mes+(ano?' '+ano:'')+'）':''));
   }).catch(function(e){setSynced(false);alert('Erro: '+e.message);})
   .finally(function(){btn.disabled=false;});
 }
 
-function removeReceita(id){db.collection('receitas').doc(id).delete().then(function(){setSynced(true);renderSugestoes();}).catch(function(){setSynced(false);});}
-function removeDespesa(id){db.collection('despesas').doc(id).delete().then(function(){setSynced(true);renderSugestoes();}).catch(function(){setSynced(false);});}
+function removeReceita(id){db.collection('receitas').doc(id).delete().then(function(){setSynced(true);}).catch(function(){setSynced(false);});}
+function removeDespesa(id){db.collection('despesas').doc(id).delete().then(function(){setSynced(true);}).catch(function(){setSynced(false);});}
 function removeHistorico(id){
   if(!confirm('Remover este mês do histórico?'))return;
   db.collection('historico').doc(id).delete().then(function(){setSynced(true);renderHistorico();}).catch(function(){setSynced(false);});
@@ -1144,7 +1141,7 @@ db.collection('receitas').onSnapshot(function(snap){
   receitas=snap.docs.map(function(d){var data=d.data();data.id=d.id;return data;});
   receitas.sort(function(a,b){var ta=a.criadoEm?a.criadoEm.seconds:0,tb=b.criadoEm?b.criadoEm.seconds:0;return ta-tb;});
   _carregouDados=true;
-  renderReceitas();renderHome();setSynced(true);
+  renderReceitas();renderHome();renderSugestoes();setSynced(true);
 },function(err){console.error('receitas:',err);setSynced(false);});
 
 db.collection('despesas').onSnapshot(function(snap){
@@ -1152,14 +1149,14 @@ db.collection('despesas').onSnapshot(function(snap){
   despesas.sort(function(a,b){var ta=a.criadoEm?a.criadoEm.seconds:0,tb=b.criadoEm?b.criadoEm.seconds:0;return ta-tb;});
   _carregouDados=true;
   atualizarCategorias(despesas);
-  renderDespesas();renderHome();setSynced(true);
+  renderDespesas();renderHome();renderSugestoes();setSynced(true);
 },function(err){console.error('despesas:',err);setSynced(false);});
 
 db.collection('historico').onSnapshot(function(snap){
   historico=snap.docs.map(function(d){var data=d.data();data.id=d.id;return data;});
   historico.sort(function(a,b){var ta=a.criadoEm?a.criadoEm.seconds:0,tb=b.criadoEm?b.criadoEm.seconds:0;return ta-tb;});
   _carregouDados=true;
-  renderReceitas();renderDespesas();renderHome();setSynced(true);
+  renderReceitas();renderDespesas();renderHome();renderSugestoes();setSynced(true);
 },function(err){console.error('historico:',err);setSynced(false);});
 </script>
 </body>
