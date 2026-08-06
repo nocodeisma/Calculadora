@@ -8,6 +8,7 @@
 <title>Finanças v14+</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f0ee;color:#1a1a1a;min-height:100vh;}
@@ -142,6 +143,14 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
   cursor:pointer;font-family:inherit;color:#888;transition:all 0.2s;
 }
 .tab-btn.active{background:#185FA5;color:#fff;border-color:#185FA5;}
+
+/* ── EXPORTAR EXCEL ── */
+.hbtn-export{background:#0f7a4a;color:#fff;width:100%;border-radius:14px;padding:1rem 1.25rem;border:none;cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:12px;font-family:inherit;}
+.hbtn-export:active{transform:scale(0.98);}
+.export-loading{display:flex;align-items:center;gap:8px;justify-content:center;padding:10px;font-size:12px;color:#666;}
+.spinner{width:14px;height:14px;border:2px solid #ddd;border-top-color:#0f7a4a;border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
 </style>
 </head>
 <body>
@@ -170,6 +179,10 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
   <button class="hbtn-h" onclick="goTo('historico')">
     <span style="font-size:20px;">📋</span>
     <div><span class="hbtn-label">Meses fechados</span><div class="hbtn-title">Histórico</div></div>
+  </button>
+  <button class="hbtn-export" onclick="abrirModalExport()">
+    <span style="font-size:20px;">📊</span>
+    <div><span class="hbtn-label">Planilha por mês</span><div class="hbtn-title">Exportar Excel</div></div>
   </button>
   
   <div class="fcard" style="margin-bottom:12px;">
@@ -313,6 +326,40 @@ input:focus,select:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)
     <div class="modal-actions">
       <button class="mbtn mbtn-c" onclick="fecharModal()">Cancelar</button>
       <button class="mbtn mbtn-ok" id="modal-confirm-btn" onclick="confirmarFechamento()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modal-export-overlay">
+  <div class="modal-box">
+    <div class="modal-title">📊 Exportar Excel</div>
+    <div class="modal-sub">Selecione o período (mês/ano) que deseja incluir na planilha.</div>
+    <div style="font-size:11px;font-weight:600;color:#0f7a4a;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">De</div>
+    <div class="grid2">
+      <div><label>Mês</label>
+        <select id="export-de-mes">
+          <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
+          <option>Maio</option><option>Junho</option><option>Julho</option><option>Agosto</option>
+          <option>Setembro</option><option>Outubro</option><option>Novembro</option><option>Dezembro</option>
+        </select>
+      </div>
+      <div><label>Ano</label><input type="number" id="export-de-ano" min="2020" max="2099" value="2026"/></div>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:#0f7a4a;text-transform:uppercase;letter-spacing:0.05em;margin:10px 0 6px;">Até</div>
+    <div class="grid2">
+      <div><label>Mês</label>
+        <select id="export-ate-mes">
+          <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
+          <option>Maio</option><option>Junho</option><option>Julho</option><option>Agosto</option>
+          <option>Setembro</option><option>Outubro</option><option>Novembro</option><option>Dezembro</option>
+        </select>
+      </div>
+      <div><label>Ano</label><input type="number" id="export-ate-ano" min="2020" max="2099" value="2026"/></div>
+    </div>
+    <div id="export-status" class="hidden export-loading"><div class="spinner"></div><span>Gerando planilha...</span></div>
+    <div class="modal-actions">
+      <button class="mbtn mbtn-c" onclick="fecharModalExport()">Cancelar</button>
+      <button class="mbtn mbtn-ok" id="export-confirm-btn" style="background:#0f7a4a;" onclick="confirmarExport()">Exportar</button>
     </div>
   </div>
 </div>
@@ -744,6 +791,213 @@ function confirmarFechamento(){
   .then(function(){setSynced(true);fecharModal();alert((existente?'Fechamento atualizado':'Mês fechado')+' com sucesso! '+itensFiltrados.length+' lançamento(s) de '+mes+' '+ano+'.');})
   .catch(function(e){setSynced(false);alert('Erro: '+e.message);})
   .finally(function(){btn.disabled=false;});
+}
+
+// ══════════════════════════════════════════════
+// EXPORTAR EXCEL — planilha por dia de pagamento
+// ══════════════════════════════════════════════
+var MLIST_EXPORT=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function mesAnoValor(mes,ano){return (parseInt(ano||0)*12)+MLIST_EXPORT.indexOf(mes);}
+
+// Junta itens ainda abertos (coleções ao vivo) + itens já fechados (histórico) numa lista única
+function getReceitasCombinadas(){
+  var lista=receitas.map(function(p){return{desc:p.desc,valor:p.sub,date:p.date,mes:p.mes,ano:p.ano};});
+  historico.forEach(function(h){
+    if(h.tipo==='receita'){
+      (h.itens||[]).forEach(function(i){lista.push({desc:i.desc,valor:i.valor,date:i.date,mes:h.mes,ano:h.ano});});
+    }
+  });
+  return lista;
+}
+function getDespesasCombinadas(){
+  var lista=despesas.map(function(p){return{desc:p.desc,valor:p.valor,date:p.date,mes:p.mes,ano:p.ano};});
+  historico.forEach(function(h){
+    if(h.tipo==='despesa'){
+      (h.itens||[]).forEach(function(i){lista.push({desc:i.desc,valor:i.valor,date:i.date,mes:h.mes,ano:h.ano});});
+    }
+  });
+  return lista;
+}
+
+function abrirModalExport(){
+  // Sugere um período padrão: do mês mais antigo ao mês mais recente com dados
+  var todos=getReceitasCombinadas().concat(getDespesasCombinadas()).filter(function(p){return p.mes&&p.ano;});
+  var deSel=document.getElementById('export-de-mes'), deAno=document.getElementById('export-de-ano');
+  var ateSel=document.getElementById('export-ate-mes'), ateAno=document.getElementById('export-ate-ano');
+  if(todos.length){
+    var minP=todos[0],maxP=todos[0];
+    todos.forEach(function(p){
+      if(mesAnoValor(p.mes,p.ano)<mesAnoValor(minP.mes,minP.ano)) minP=p;
+      if(mesAnoValor(p.mes,p.ano)>mesAnoValor(maxP.mes,maxP.ano)) maxP=p;
+    });
+    deSel.value=minP.mes; deAno.value=minP.ano;
+    ateSel.value=maxP.mes; ateAno.value=maxP.ano;
+  }else{
+    var hoje=new Date();
+    deSel.value=MLIST_EXPORT[hoje.getMonth()]; deAno.value=hoje.getFullYear();
+    ateSel.value=MLIST_EXPORT[hoje.getMonth()]; ateAno.value=hoje.getFullYear();
+  }
+  document.getElementById('export-status').classList.add('hidden');
+  document.getElementById('modal-export-overlay').classList.remove('hidden');
+}
+function fecharModalExport(){document.getElementById('modal-export-overlay').classList.add('hidden');}
+
+// Monta a tabela dinâmica (linhas=descrição, colunas=mês) para um dia de pagamento específico
+function buildPivotDia(itens,dia){
+  var subset=itens.filter(function(p){return p.date===dia;});
+  var monthMap={};
+  subset.forEach(function(p){
+    var key=(p.mes||'')+'|'+String(p.ano||'');
+    monthMap[key]=true;
+  });
+  var monthKeys=Object.keys(monthMap).sort(function(a,b){
+    var pa=a.split('|'),pb=b.split('|');
+    return mesAnoValor(pa[0],pa[1])-mesAnoValor(pb[0],pb[1]);
+  });
+  var descMap={},descOrder=[];
+  subset.forEach(function(p){
+    var mk=(p.mes||'')+'|'+String(p.ano||'');
+    if(!descMap[p.desc]){descMap[p.desc]={};descOrder.push(p.desc);}
+    descMap[p.desc][mk]=(descMap[p.desc][mk]||0)+(p.valor||0);
+  });
+  descOrder.sort(function(a,b){return a.localeCompare(b,'pt-BR');});
+  return{monthKeys:monthKeys,descOrder:descOrder,descMap:descMap};
+}
+
+function colLetter(n){
+  var s='';
+  while(n>0){var m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26);}
+  return s;
+}
+
+// Escreve uma seção (receita ou despesa) na planilha, agrupada por dia 16 e dia 25
+function escreverSecaoExport(sheet,rowRef,titulo,corHex,itens){
+  var groups=[16,25];
+  var blocks=groups.map(function(dia){return buildPivotDia(itens,dia);});
+  var maxMonths=0;
+  blocks.forEach(function(b){if(b.monthKeys.length>maxMonths)maxMonths=b.monthKeys.length;});
+  var totalCols=Math.max(2+Math.max(maxMonths,1),3);
+
+  var r=rowRef.row;
+  var titleRow=sheet.getRow(r);
+  titleRow.getCell(1).value=titulo;
+  titleRow.getCell(1).font={bold:true,color:{argb:'FFFFFFFF'},size:12};
+  for(var c=1;c<=totalCols;c++){
+    titleRow.getCell(c).fill={type:'pattern',pattern:'solid',fgColor:{argb:corHex}};
+  }
+  sheet.mergeCells(r,1,r,totalCols);
+  r+=2;
+
+  var temAlgumDado=false;
+  groups.forEach(function(dia,idx){
+    var b=blocks[idx];
+    if(!b.descOrder.length) return;
+    temAlgumDado=true;
+    var diaRow=sheet.getRow(r);
+    diaRow.getCell(1).value='Dia de Pagamento: '+dia;
+    diaRow.getCell(1).font={bold:true,color:{argb:'FF1a1a1a'}};
+    diaRow.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF0F0EE'}};
+    r++;
+    var hdrRow=sheet.getRow(r);
+    hdrRow.getCell(2).value='Descrição';
+    hdrRow.getCell(2).font={bold:true};
+    b.monthKeys.forEach(function(mk,i){
+      var parts=mk.split('|');
+      var label=parts[0]+(parts[1]?' '+parts[1]:'');
+      var cell=hdrRow.getCell(3+i);
+      cell.value=label;
+      cell.font={bold:true};
+      cell.alignment={horizontal:'center'};
+    });
+    r++;
+    b.descOrder.forEach(function(desc){
+      var dataRow=sheet.getRow(r);
+      dataRow.getCell(2).value=desc;
+      b.monthKeys.forEach(function(mk,i){
+        var val=b.descMap[desc][mk];
+        var cell=dataRow.getCell(3+i);
+        if(val!=null){
+          cell.value=val;
+          cell.numFmt='"R$" #,##0.00';
+        }
+      });
+      r++;
+    });
+    r++;
+  });
+  if(!temAlgumDado){
+    sheet.getRow(r).getCell(1).value='(sem lançamentos no período selecionado)';
+    sheet.getRow(r).getCell(1).font={italic:true,color:{argb:'FF999999'}};
+    r++;
+  }
+  r++;
+  rowRef.row=r;
+  return totalCols;
+}
+
+function confirmarExport(){
+  var deMes=document.getElementById('export-de-mes').value;
+  var deAno=parseInt(document.getElementById('export-de-ano').value)||0;
+  var ateMes=document.getElementById('export-ate-mes').value;
+  var ateAno=parseInt(document.getElementById('export-ate-ano').value)||0;
+  var deVal=mesAnoValor(deMes,deAno), ateVal=mesAnoValor(ateMes,ateAno);
+  if(deVal>ateVal){alert('O período "De" precisa ser antes ou igual ao período "Até".');return;}
+
+  if(typeof ExcelJS==='undefined'){
+    alert('Não foi possível carregar a biblioteca de exportação. Verifique sua conexão com a internet e tente novamente.');
+    return;
+  }
+
+  var btn=document.getElementById('export-confirm-btn');
+  btn.disabled=true;
+  document.getElementById('export-status').classList.remove('hidden');
+
+  setTimeout(function(){
+    try{
+      var receitasFiltradas=getReceitasCombinadas().filter(function(p){
+        var v=mesAnoValor(p.mes,p.ano);
+        return v>=deVal&&v<=ateVal;
+      });
+      var despesasFiltradas=getDespesasCombinadas().filter(function(p){
+        var v=mesAnoValor(p.mes,p.ano);
+        return v>=deVal&&v<=ateVal;
+      });
+
+      var workbook=new ExcelJS.Workbook();
+      var sheet=workbook.addWorksheet('Finanças');
+      sheet.getColumn(1).width=22;
+      sheet.getColumn(2).width=26;
+      for(var c=3;c<=14;c++) sheet.getColumn(c).width=14;
+
+      var rowRef={row:2};
+      escreverSecaoExport(sheet,rowRef,'RECEITA','FF2D7A2D',receitasFiltradas);
+      escreverSecaoExport(sheet,rowRef,'DESPESAS','FF185FA5',despesasFiltradas);
+
+      workbook.xlsx.writeBuffer().then(function(buffer){
+        var blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+        var url=URL.createObjectURL(blob);
+        var a=document.createElement('a');
+        a.href=url;
+        a.download='financas_'+deMes+'-'+deAno+'_a_'+ateMes+'-'+ateAno+'.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        document.getElementById('export-status').classList.add('hidden');
+        btn.disabled=false;
+        fecharModalExport();
+      }).catch(function(e){
+        document.getElementById('export-status').classList.add('hidden');
+        btn.disabled=false;
+        alert('Erro ao gerar arquivo: '+e.message);
+      });
+    }catch(e){
+      document.getElementById('export-status').classList.add('hidden');
+      btn.disabled=false;
+      alert('Erro ao gerar planilha: '+e.message);
+    }
+  },50);
 }
 
 function renderReceitas(){
